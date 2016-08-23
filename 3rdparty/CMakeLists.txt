@@ -1,0 +1,2 @@
+ADD_SUBDIRECTORY(tinycthread)
+ADD_SUBDIRECTORY(glfw)
