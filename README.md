@@ -24,6 +24,14 @@ Download
 
 [CToy 1.00 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.00-OSX_10.6-x86_64.zip)
 
+Getting started
+---------------
+
+- Launch CToy
+- Open src/main.c using your favorite text editor
+- Start coding (samples included)
+- Save your file(s) and see the result in realtime
+
 Building (CMake)
 ----------------
 
@@ -40,11 +48,3 @@ Building (CMake)
     mkdir Build
     cd Build
     cmake -G "Visual Studio 11 Win64" ../ -DCMAKE_INSTALL_PREFIX=../bin
-
-Getting started
----------------
-
-- Launch CToy
-- Open src/main.c using your favorite text editor
-- Start coding (samples included)
-- Save your file(s) and see the result in realtime
