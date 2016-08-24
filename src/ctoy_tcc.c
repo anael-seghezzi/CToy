@@ -450,6 +450,7 @@ int _ctoy_tcc_init(void)
 	tcc_add_library(_ctoy_tcc, "msvcrt");
 	tcc_add_library(_ctoy_tcc, "opengl32");
 	tcc_add_library(_ctoy_tcc, "OpenAL32");
+	tcc_set_options(_ctoy_tcc, "-Wl,--stack=8388608");
 #endif
 	_ctoy_add_libs();
 
