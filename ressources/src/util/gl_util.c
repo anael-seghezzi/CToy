@@ -3,7 +3,7 @@
 void gu_texture_from_file(const char *filename)
 {
 	struct m_image ubi = M_IMAGE_IDENTITY();
-	if (ctoy_image_load(&ubi, filename)) {
+	if (m_image_load(&ubi, filename)) {
 		if (ubi.comp == 1)
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ubi.width, ubi.height, 0, GL_RGB, GL_UNSIGNED_BYTE, ubi.data);
 		else if (ubi.comp == 3)

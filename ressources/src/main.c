@@ -7,6 +7,8 @@
 #include "sample/hello_world.c"
 
 #elif CTOY_SAMPLE == 2
+#include "util/img_util.c"
+#include "util/gl_util.c"
 #include "sample/triangle_hello.c"
 
 #elif CTOY_SAMPLE == 3

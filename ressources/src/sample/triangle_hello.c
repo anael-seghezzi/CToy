@@ -1,7 +1,5 @@
 // OpenGL-ES2 hello triangle
 
-#include "../util/gl_util.c"
-
 GLuint vert_shader = 0;
 GLuint frag_shader = 0;
 GLuint prog_object = 0;
