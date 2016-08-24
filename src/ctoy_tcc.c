@@ -35,6 +35,7 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <libtcc.h>
 
 
@@ -216,8 +217,16 @@ void _ctoy_symbols(void)
 	tcc_add_symbol(_ctoy_tcc, "ctoy_mouse_button_press", ctoy_mouse_button_press);
 	tcc_add_symbol(_ctoy_tcc, "ctoy_mouse_button_release", ctoy_mouse_button_release);
 	tcc_add_symbol(_ctoy_tcc, "ctoy_mouse_button_pressed", ctoy_mouse_button_pressed);
+
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_present", ctoy_joystick_present);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_axis_count", ctoy_joystick_axis_count);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_button_count", ctoy_joystick_button_count);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_button_press", ctoy_joystick_button_press);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_button_release", ctoy_joystick_button_release);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_button_pressed", ctoy_joystick_button_pressed);
+	tcc_add_symbol(_ctoy_tcc, "ctoy_joystick_axis", ctoy_joystick_axis);
+
 	tcc_add_symbol(_ctoy_tcc, "ctoy_get_chars", ctoy_get_chars);
-	tcc_add_symbol(_ctoy_tcc, "ctoy_image_load", ctoy_image_load);
 	tcc_add_symbol(_ctoy_tcc, "ctoy_window_size", ctoy_window_size);
 	tcc_add_symbol(_ctoy_tcc, "ctoy_swap_buffer", ctoy_swap_buffer);
 	tcc_add_symbol(_ctoy_tcc, "ctoy_window_fullscreen", ctoy_window_fullscreen);

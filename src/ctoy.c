@@ -75,9 +75,6 @@
 #include "m_dist.h"
 #include "m_raster.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 
 /* system */
 char           _ctoy_title[256];
@@ -93,10 +90,17 @@ int            _ctoy_tex_width = 0;
 int            _ctoy_tex_height = 0;
 
 /* input */
-#define        CTOY_MOUSE_BUTTON_COUNT GLFW_MOUSE_BUTTON_LAST
-#define        CTOY_BUTTON_COUNT GLFW_KEY_LAST
-char           _ctoy_button[CTOY_BUTTON_COUNT][2];
+#define        CTOY_MOUSE_BUTTON_COUNT (GLFW_MOUSE_BUTTON_LAST+1)
+#define        CTOY_KEY_COUNT (GLFW_KEY_LAST+1)
+#define        CTOY_JOY_COUNT (GLFW_JOYSTICK_LAST+1)
+#define        CTOY_JOY_AXIS_MAX 32
+#define        CTOY_JOY_BUTTON_MAX 32
+char           _ctoy_button[CTOY_KEY_COUNT][2];
 char           _ctoy_mouse_button[CTOY_MOUSE_BUTTON_COUNT][2];
+char           _ctoy_joystick_button[CTOY_JOY_COUNT][CTOY_JOY_BUTTON_MAX][2];
+float          _ctoy_joystick_axis[CTOY_JOY_COUNT][CTOY_JOY_AXIS_MAX];
+char           _ctoy_joystick_button_count[CTOY_JOY_COUNT];
+char           _ctoy_joystick_axis_count[CTOY_JOY_COUNT];
 unsigned int   _ctoy_char_queue[CTOY_CHAR_MAX];
 int            _ctoy_char_count = 0;
 float          _ctoy_mouse_x = 0;
@@ -152,7 +156,7 @@ static void _ctoy_cursorpos_callback(GLFWwindow * window, double x, double y)
 
 static void _ctoy_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-   if (key >=0 && key < CTOY_BUTTON_COUNT) {
+   if (key >=0 && key < CTOY_KEY_COUNT) {
       _ctoy_button[key][0] = action + 1;
       _ctoy_button[key][1] = action;
    }
@@ -272,8 +276,12 @@ static int _ctoy_window_init(const char *title, int fullscreen)
 
 static int _ctoy_create(const char *title, int width, int height)
 {
-   memset(_ctoy_button, 0, CTOY_BUTTON_COUNT*2*sizeof(char));
-   memset(_ctoy_mouse_button, 0, CTOY_MOUSE_BUTTON_COUNT*2*sizeof(char));
+   memset(_ctoy_button, 0, sizeof(_ctoy_button));
+   memset(_ctoy_mouse_button, 0, sizeof(_ctoy_mouse_button));
+   memset(_ctoy_joystick_button, 0, sizeof(_ctoy_joystick_button));
+   memset(_ctoy_joystick_axis, 0, sizeof(_ctoy_joystick_axis));
+   memset(_ctoy_joystick_button_count, 0, sizeof(_ctoy_joystick_button_count));
+   memset(_ctoy_joystick_axis_count, 0, sizeof(_ctoy_joystick_axis_count));
 
    glfwInit();
 
@@ -338,16 +346,49 @@ static void _ctoy_destroy(void)
    m_image_destroy(&_ctoy_buffer_ubyte);
 }
 
+static void _ctoy_joy_update(int joy)
+{
+   const float *axis;
+   const unsigned char *button;
+   int axis_count, button_count;
+
+   axis = glfwGetJoystickAxes(joy, &axis_count);
+   button = glfwGetJoystickButtons(joy, &button_count);
+
+   if (axis) {
+      int c = M_MIN(axis_count, CTOY_JOY_AXIS_MAX);
+      _ctoy_joystick_axis_count[joy] = c;
+      memcpy(_ctoy_joystick_axis[joy], axis, c * sizeof(float));
+   }
+
+   if (button) {
+      int i, c = M_MIN(button_count, CTOY_JOY_BUTTON_MAX);
+      _ctoy_joystick_button_count[joy] = c;
+      for (i = 0; i < c; i++) {
+         int s0 = _ctoy_joystick_button[joy][i][1];
+         int s1 = button[i];
+         _ctoy_joystick_button[joy][i][0] = s1 - s0;
+         _ctoy_joystick_button[joy][i][1] = s1;
+      }
+   }
+}
+
 static void _ctoy_update(void)
 {
    int i;
+
+   /* joystick */
+   for (i = 0; i < CTOY_JOY_COUNT; i++)
+      _ctoy_joy_update(i);
+
    /* flush events */
-   for (i = 0; i < CTOY_BUTTON_COUNT; i++)
+   for (i = 0; i < CTOY_KEY_COUNT; i++)
       _ctoy_button[i][0] = 0;
    for (i = 0; i < CTOY_MOUSE_BUTTON_COUNT; i++)
       _ctoy_mouse_button[i][0] = 0; 
    _ctoy_char_count = 0;
    glfwPollEvents();
+
    _ctoy_t++;
 }
 
@@ -422,6 +463,41 @@ int ctoy_mouse_button_pressed(int button)
    return (_ctoy_mouse_button[button][1] > 0);
 }
 
+int ctoy_joystick_present(int joy)
+{
+   return glfwJoystickPresent(joy);
+}
+
+int ctoy_joystick_axis_count(int joy)
+{
+   return _ctoy_joystick_axis_count[joy];
+}
+
+int ctoy_joystick_button_count(int joy)
+{
+   return _ctoy_joystick_button_count[joy];
+}
+
+int ctoy_joystick_button_press(int joy, int button)
+{
+   return (_ctoy_joystick_button[joy][button][0] > 0);
+}
+
+int ctoy_joystick_button_release(int joy, int button)
+{
+   return (_ctoy_joystick_button[joy][button][0] < 0);
+}
+
+int ctoy_joystick_button_pressed(int joy, int button)
+{
+   return _ctoy_joystick_button[joy][button][1];
+}
+
+float ctoy_joystick_axis(int joy, int axis)
+{
+   return _ctoy_joystick_axis[joy][axis];
+}
+
 void ctoy_swap_buffer(struct m_image *image)
 {
    if (image) {
@@ -467,25 +543,6 @@ void ctoy_window_size(int width, int height)
 void ctoy_window_fullscreen(int fullscreen)
 {
    _ctoy_window_init(_ctoy_title, fullscreen);
-}
-
-int ctoy_image_load(struct m_image *dest, const char *filename)
-{
-   int w, h, n;
-   unsigned char *data = stbi_load(filename, &w, &h, &n, 0);
-   if (data == NULL) {
-      printf("ERROR CTOY: unable to read image %s\n", filename);
-      return 0;
-   }
-
-   m_image_destroy(dest);
-   dest->data = data;
-   dest->size = w * h * n;
-   dest->width = w;
-   dest->height = h;
-   dest->comp = n;
-   dest->type = M_UBYTE;
-   return 1;
 }
 
 unsigned long ctoy_t(void)

@@ -48,7 +48,6 @@ float ctoy_mouse_y(void);
 double ctoy_get_time(void);
 void ctoy_sleep(long sec, long nsec);
 
-int ctoy_image_load(struct m_image *dest, const char *filename);
 void ctoy_window_size(int width, int height);
 void ctoy_window_title(const char *title);
 void ctoy_window_fullscreen(int state);
@@ -61,6 +60,14 @@ int ctoy_key_pressed(int key);
 int ctoy_mouse_button_press(int button);
 int ctoy_mouse_button_release(int button);
 int ctoy_mouse_button_pressed(int button);
+
+int ctoy_joystick_present(int joy);
+int ctoy_joystick_axis_count(int joy);
+int ctoy_joystick_button_count(int joy);
+int ctoy_joystick_button_press(int joy, int button);
+int ctoy_joystick_button_release(int joy, int button);
+int ctoy_joystick_button_pressed(int joy, int button);
+float ctoy_joystick_axis(int joy, int axis);
 
 int ctoy_get_chars(unsigned int dest[CTOY_CHAR_MAX]);
 
@@ -201,5 +208,23 @@ void *ctoy_retrieve_memory(void);
 #define CTOY_MOUSE_BUTTON_LEFT      CTOY_MOUSE_BUTTON_1
 #define CTOY_MOUSE_BUTTON_RIGHT     CTOY_MOUSE_BUTTON_2
 #define CTOY_MOUSE_BUTTON_MIDDLE    CTOY_MOUSE_BUTTON_3
+
+/* joysticks */
+#define CTOY_JOYSTICK_1             0
+#define CTOY_JOYSTICK_2             1
+#define CTOY_JOYSTICK_3             2
+#define CTOY_JOYSTICK_4             3
+#define CTOY_JOYSTICK_5             4
+#define CTOY_JOYSTICK_6             5
+#define CTOY_JOYSTICK_7             6
+#define CTOY_JOYSTICK_8             7
+#define CTOY_JOYSTICK_9             8
+#define CTOY_JOYSTICK_10            9
+#define CTOY_JOYSTICK_11            10
+#define CTOY_JOYSTICK_12            11
+#define CTOY_JOYSTICK_13            12
+#define CTOY_JOYSTICK_14            13
+#define CTOY_JOYSTICK_15            14
+#define CTOY_JOYSTICK_16            15
 
 #endif
