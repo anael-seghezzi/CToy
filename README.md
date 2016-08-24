@@ -19,6 +19,11 @@ Features
 * Compile your project natively using CMake (tool included)
 * Emscripten compatible (tool in progress)
 
+Download
+--------
+
+[CToy 1.00 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.00-OSX_10.6-x86_64.zip)
+
 Building (CMake)
 ----------------
 
