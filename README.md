@@ -18,6 +18,8 @@ Features
 * Compile your project natively using CMake (tool included)
 * Emscripten compatible (tool in progress)
 
+<br><p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
+
 Download
 --------
 
