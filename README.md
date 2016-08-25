@@ -9,7 +9,7 @@ Features
 --------
 
 * CToy: live-coding on file save (use any text editor)
-* CToy_player: to publish your project (live update disabled)
+* CToy_player: to publish your project (live-coding disabled)
 * API for window managment, inputs, persistent memory...
 * Image processing with [MaratisTCL](https://github.com/anael-seghezzi/Maratis-Tiny-C-library)
 * OpenGLES-2 simulation
