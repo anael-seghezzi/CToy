@@ -16,7 +16,7 @@ Features
 * OpenAL
 * Embedded libtcc
 * Plug external libraries: use C-symbols from dll or dylib files
-* Can also compile your project natively (CMake-based tool for gcc, vs, mingw)
+* Can also compile your project with other compilers (CMake script for gcc, vs, mingw)
 * Emscripten compatible (tool in progress)
 
 Download
