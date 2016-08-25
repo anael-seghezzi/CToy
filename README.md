@@ -21,6 +21,7 @@ Features
 Download
 --------
 
+[CToy 1.00 Win64](http://anael.maratis3d.com/ctoy/bin/CToy-1.00-WIN-x86_64.zip)<br>
 [CToy 1.00 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.00-OSX_10.6-x86_64.zip)
 
 Getting started
