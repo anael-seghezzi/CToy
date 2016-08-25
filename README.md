@@ -3,7 +3,7 @@ CToy
 
 CToy is a C(99) live-coding environment based on [TCC](http://bellard.org/tcc/).
 
-Small, realtime, no bullshit. Write cross-platform-checked C code dynamically, compatible with standard compilers and Emscripten (web deployment). Ready for Windows 64 bit and MacOSX 64 bit (linux in progress).
+Small, simple, no bullshit. Write real cross-platform C code, compatible with standard compilers, and see the result immediately. Ready for Windows 64 bit and MacOSX 64 bit (linux in progress).
 
 Features
 --------
@@ -11,7 +11,7 @@ Features
 * Live-coding on file save (use any text editor) + static player
 * CToy API for window managment, inputs, persistent memory...
 * Image processing with [MaratisTCL](https://github.com/anael-seghezzi/Maratis-Tiny-C-library)
-* OpenGLES-2 header-based simulation
+* OpenGLES-2 header simulation
 * OpenAL
 * Embedded libtcc
 * Load C-symbols from dll or dylib files
