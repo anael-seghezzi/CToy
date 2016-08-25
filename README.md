@@ -35,8 +35,8 @@ Getting started
 
 <p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
 
-Building (CMake)
-----------------
+Building CToy from sources (CMake)
+----------------------------------
 
 **Unix:**
 
