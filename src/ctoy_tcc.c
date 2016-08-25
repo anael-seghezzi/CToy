@@ -64,7 +64,7 @@ int _ctoy_io_open(const char *filename, int access, ...)
 	va_list args;
 	va_start(args, access);
 
-	/* custom io (tcc HACK to get the list of active src files) */
+	// custom io (tcc HACK to get the list of active src files)
 	if (strncmp(filename, "src", 3) == 0 && _ctoy_src_count < _CTOY_MAX_SRC) {
 		strcpy(_ctoy_src_path[_ctoy_src_count], filename);
 		_ctoy_src_count++;
@@ -407,15 +407,15 @@ void _ctoy_add_libs(void)
 			if (! _ctoy_is_directory(filename)) {
 #ifdef WIN32
 				LoadLibrary(filename);
-				tcc_add_file(_ctoy_tcc, filename);
+				tcc_add_file(_ctoy_tcc, filename, TCC_FILETYPE_BINARY);
 #else
 				dlopen(filename, RTLD_LAZY);
 #endif
 			}
 		}
+
+		closedir(pdir);
 	}
-	
-	closedir(pdir);
 }
 
 int _ctoy_tcc_init(void)
@@ -455,7 +455,7 @@ int _ctoy_tcc_init(void)
 	_ctoy_add_libs();
 
 	/* main.c */
-	if (tcc_add_file(_ctoy_tcc, "src/main.c") == -1)
+	if (tcc_add_file(_ctoy_tcc, "src/main.c", TCC_FILETYPE_C) == -1)
         return 0;
 
 	/* symbols */

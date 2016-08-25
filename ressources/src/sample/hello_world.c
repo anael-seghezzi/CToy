@@ -100,8 +100,8 @@ void ctoy_main_loop(void)
 	// enter / exit fullscreen
 	if (ctoy_key_press(CTOY_KEY_F)) {
 		fullscreen = !fullscreen;
-		if (!fullscreen) ctoy_window_size(512, 512);
 		ctoy_window_fullscreen(fullscreen);
+      if (!fullscreen) ctoy_window_size(512, 512);
 	}
 
 	// exit

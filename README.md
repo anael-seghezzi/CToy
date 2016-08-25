@@ -8,8 +8,7 @@ Small, realtime, no bullshit. Write cross-platform-checked C code dynamically, c
 Features
 --------
 
-* Realtime live-coding on file save (use any text editor) + static player
-* Cross-platform (simplified) libc
+* Live-coding on file save (use any text editor) + static player
 * CToy API for window managment, inputs, persistent memory...
 * Image processing with [MaratisTCL](https://github.com/anael-seghezzi/Maratis-Tiny-C-library)
 * OpenGLES-2 header-based simulation
