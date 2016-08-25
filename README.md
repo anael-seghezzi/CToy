@@ -18,8 +18,6 @@ Features
 * Compile your project natively using CMake (tool included)
 * Emscripten compatible (tool in progress)
 
-<br><p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
-
 Download
 --------
 
@@ -33,6 +31,8 @@ Getting started
 - Open src/main.c using your favorite text editor
 - Start coding (samples included)
 - Save your file(s) and see the result in realtime
+
+<p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
 
 Building (CMake)
 ----------------
