@@ -50,3 +50,7 @@ Building (CMake)
     mkdir Build
     cd Build
     cmake -G "Visual Studio 11 Win64" ../ -DCMAKE_INSTALL_PREFIX=../bin
+
+
+(libtcc.dll and libtcc.dylib where pre-built from a fork of tcc:
+[libtcc-fork](https://github.com/anael-seghezzi/tcc-0.9.26))
