@@ -431,6 +431,10 @@ int _ctoy_tcc_init(void)
         return 0;
     }
 	
+#ifndef CTOY_PLAYER
+	_ctoy_io_replace();
+#endif
+
 	/* search path */
 	tcc_add_library_path(_ctoy_tcc, _ctoy_dir);
 
@@ -507,11 +511,6 @@ int main(int argc, char **argv)
 		_ctoy_oal_destroy();
 		return EXIT_FAILURE;
 	}
-
-	/* tcc */
-#ifndef CTOY_PLAYER
-	_ctoy_io_replace();
-#endif
 
 	_ctoy_src_state = _ctoy_tcc_init();
 
