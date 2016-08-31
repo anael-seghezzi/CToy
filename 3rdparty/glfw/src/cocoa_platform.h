@@ -1,10 +1,7 @@
 //========================================================================
-// GLFW - An OpenGL library
-// Platform:    Cocoa
-// API Version: 3.0
-// WWW:         http://www.glfw.org/
+// GLFW 3.2 OS X - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2009-2010 Camilla Berglund <elmindreda@elmindreda.org>
+// Copyright (c) 2009-2016 Camilla Berglund <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -27,128 +24,127 @@
 //
 //========================================================================
 
-#ifndef _cocoa_platform_h_
-#define _cocoa_platform_h_
-
+#ifndef _glfw3_cocoa_platform_h_
+#define _glfw3_cocoa_platform_h_
 
 #include <stdint.h>
+#include <dlfcn.h>
 
 #if defined(__OBJC__)
+#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #else
+#include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
 typedef void* id;
 #endif
 
-#if defined(_GLFW_NSGL)
- #include "nsgl_platform.h"
-#else
- #error "No supported context creation API selected"
-#endif
+#include "posix_tls.h"
+#include "cocoa_joystick.h"
+#include "nsgl_context.h"
 
-#include <IOKit/IOKitLib.h>
-#include <IOKit/IOCFPlugIn.h>
-#include <IOKit/hid/IOHIDLib.h>
-#include <IOKit/hid/IOHIDKeys.h>
+#define _glfw_dlopen(name) dlopen(name, RTLD_LAZY | RTLD_LOCAL)
+#define _glfw_dlclose(handle) dlclose(handle)
+#define _glfw_dlsym(handle, name) dlsym(handle, name)
 
 #define _GLFW_PLATFORM_WINDOW_STATE         _GLFWwindowNS  ns
 #define _GLFW_PLATFORM_LIBRARY_WINDOW_STATE _GLFWlibraryNS ns
+#define _GLFW_PLATFORM_LIBRARY_TIME_STATE   _GLFWtimeNS    ns_time
 #define _GLFW_PLATFORM_MONITOR_STATE        _GLFWmonitorNS ns
+#define _GLFW_PLATFORM_CURSOR_STATE         _GLFWcursorNS  ns
+
+#define _GLFW_EGL_CONTEXT_STATE
+#define _GLFW_EGL_LIBRARY_CONTEXT_STATE
+
+// HIToolbox.framework pointer typedefs
+#define kTISPropertyUnicodeKeyLayoutData _glfw.ns.tis.kPropertyUnicodeKeyLayoutData
+#define kTISNotifySelectedKeyboardInputSourceChanged _glfw.ns.tis.kNotifySelectedKeyboardInputSourceChanged
+typedef TISInputSourceRef (*PFN_TISCopyCurrentKeyboardLayoutInputSource)(void);
+#define TISCopyCurrentKeyboardLayoutInputSource _glfw.ns.tis.CopyCurrentKeyboardLayoutInputSource
+typedef void* (*PFN_TISGetInputSourceProperty)(TISInputSourceRef,CFStringRef);
+#define TISGetInputSourceProperty _glfw.ns.tis.GetInputSourceProperty
+typedef UInt8 (*PFN_LMGetKbdType)(void);
+#define LMGetKbdType _glfw.ns.tis.GetKbdType
 
 
-//========================================================================
-// GLFW platform specific types
-//========================================================================
-
-
-//------------------------------------------------------------------------
-// Platform-specific window structure
-//------------------------------------------------------------------------
+// Cocoa-specific per-window data
+//
 typedef struct _GLFWwindowNS
 {
     id              object;
-    id	            delegate;
+    id              delegate;
     id              view;
-    unsigned int    modifierFlags;
+
+    // The total sum of the distances the cursor has been warped
+    // since the last cursor motion event was processed
+    // This is kept to counteract Cocoa doing the same internally
+    double          cursorWarpDeltaX, cursorWarpDeltaY;
+
 } _GLFWwindowNS;
 
-
-//------------------------------------------------------------------------
-// Joystick information & state
-//------------------------------------------------------------------------
-typedef struct
-{
-    int             present;
-    char            name[256];
-
-    IOHIDDeviceInterface** interface;
-
-    CFMutableArrayRef axisElements;
-    CFMutableArrayRef buttonElements;
-    CFMutableArrayRef hatElements;
-
-    float*          axes;
-    unsigned char*  buttons;
-
-} _GLFWjoy;
-
-
-//------------------------------------------------------------------------
-// Platform-specific library global data for Cocoa
-//------------------------------------------------------------------------
+// Cocoa-specific global data
+//
 typedef struct _GLFWlibraryNS
 {
+    CGEventSourceRef    eventSource;
+    id                  delegate;
+    id                  autoreleasePool;
+    id                  cursor;
+    TISInputSourceRef   inputSource;
+    IOHIDManagerRef     hidManager;
+    id                  unicodeData;
+    id                  listener;
+
+    char                keyName[64];
+    short int           publicKeys[256];
+    short int           nativeKeys[GLFW_KEY_LAST + 1];
+    char*               clipboardString;
+    // Where to place the cursor when re-enabled
+    double              restoreCursorPosX, restoreCursorPosY;
+    // The window whose disabled cursor mode is active
+    _GLFWwindow*        disabledCursorWindow;
+
     struct {
-        double      base;
-        double      resolution;
-    } timer;
+        CFBundleRef     bundle;
+        PFN_TISCopyCurrentKeyboardLayoutInputSource CopyCurrentKeyboardLayoutInputSource;
+        PFN_TISGetInputSourceProperty GetInputSourceProperty;
+        PFN_LMGetKbdType GetKbdType;
+        CFStringRef     kPropertyUnicodeKeyLayoutData;
+        CFStringRef     kNotifySelectedKeyboardInputSourceChanged;
+    } tis;
 
-    CGEventSourceRef eventSource;
-    id              delegate;
-    id              autoreleasePool;
-    id              cursor;
-
-    GLboolean       cursorHidden;
-
-    char*           clipboardString;
-
-    _GLFWjoy        joysticks[GLFW_JOYSTICK_LAST + 1];
 } _GLFWlibraryNS;
 
-
-//------------------------------------------------------------------------
-// Platform-specific monitor structure
-//------------------------------------------------------------------------
+// Cocoa-specific per-monitor data
+//
 typedef struct _GLFWmonitorNS
 {
     CGDirectDisplayID   displayID;
     CGDisplayModeRef    previousMode;
-    id                  screen;
+    uint32_t            unitNumber;
 
 } _GLFWmonitorNS;
 
+// Cocoa-specific per-cursor data
+//
+typedef struct _GLFWcursorNS
+{
+    id              object;
 
-//========================================================================
-// Prototypes for platform specific internal functions
-//========================================================================
+} _GLFWcursorNS;
 
-// Time
-void _glfwInitTimer(void);
+// Cocoa-specific global timer data
+//
+typedef struct _GLFWtimeNS
+{
+    uint64_t        frequency;
 
-// Joystick input
-void _glfwInitJoysticks(void);
-void _glfwTerminateJoysticks(void);
+} _GLFWtimeNS;
 
-// Fullscreen
-GLboolean _glfwSetVideoMode(_GLFWmonitor* monitor, const GLFWvidmode* desired);
-void _glfwRestoreVideoMode(_GLFWmonitor* monitor);
 
-// OpenGL support
-int _glfwInitContextAPI(void);
-void _glfwTerminateContextAPI(void);
-int _glfwCreateContext(_GLFWwindow* window,
-                       const _GLFWwndconfig* wndconfig,
-                       const _GLFWfbconfig* fbconfig);
-void _glfwDestroyContext(_GLFWwindow* window);
+void _glfwInitTimerNS(void);
 
-#endif // _cocoa_platform_h_
+GLFWbool _glfwSetVideoModeNS(_GLFWmonitor* monitor, const GLFWvidmode* desired);
+void _glfwRestoreVideoModeNS(_GLFWmonitor* monitor);
+
+#endif // _glfw3_cocoa_platform_h_

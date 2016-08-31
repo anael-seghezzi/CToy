@@ -10,6 +10,8 @@ FILE(GLOB SOURCES
   src/monitor.c
   src/time.c
   src/window.c
+  src/vulkan.c
+  src/egl_context.c
 )
 
 IF(WIN32)
