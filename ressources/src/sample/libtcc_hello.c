@@ -11,29 +11,29 @@ const char *script =
 
 void ctoy_begin(void)
 {
-	TCCState *s;
+   TCCState *s;
 
-	printf("<sample libtcc_hello>\n");
+   printf("<sample libtcc_hello>\n");
 
-	s = tcc_new();
-	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-	tcc_add_library_path(s, ".");
+   s = tcc_new();
+   tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+   tcc_add_library_path(s, ".");
 
-	if (tcc_compile_string(s, script) != -1) {
-		if (tcc_relocate(s, TCC_RELOCATE_AUTO) >= 0) {
+   if (tcc_compile_string(s, script) != -1) {
+      if (tcc_relocate(s, TCC_RELOCATE_AUTO) >= 0) {
 
-			float (*myc_fun)(float, float) = (float (*)(float, float))tcc_get_symbol(s, "myc_fun");
-			float x = myc_fun(0.1, 0.2);
-			printf("0.1 + 0.2 = %f\n", x);
-		}
-	}
+         float (*myc_fun)(float, float) = (float (*)(float, float))tcc_get_symbol(s, "myc_fun");
+         float x = myc_fun(0.1, 0.2);
+         printf("0.1 + 0.2 = %f\n", x);
+      }
+   }
 
-	tcc_delete(s);
+   tcc_delete(s);
 }
 
 void ctoy_main_loop(void)
 {
-	ctoy_sleep(0, 1000000);
+   ctoy_sleep(0, 1000000);
 }
 
 void ctoy_end(void)

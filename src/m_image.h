@@ -122,6 +122,9 @@ MIAPI void m_image_rotate_180(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_mirror_x(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src);
 
+MIAPI void m_image_premultiply(struct m_image *dest, const struct m_image *src);
+MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src);
+
 /* float/half conversion */
 MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
@@ -1458,6 +1461,49 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
    }
 
    #undef _M_MIRROR_Y
+}
+
+MIAPI void m_image_premultiply(struct m_image *dest, const struct m_image *src)
+{
+   float *dest_p, *src_p;
+   int i;
+   
+   assert(src->size > 0 && src->type == M_FLOAT && src->comp == 4);
+
+   m_image_create(dest, M_FLOAT, src->width, src->height, 4);
+   dest_p = (float *)dest->data;
+   src_p = (float *)src->data;
+
+   for (i = 0; i < src->size; i+=4) {
+      dest_p[0] = src_p[0] * src_p[3];
+      dest_p[1] = src_p[1] * src_p[3];
+      dest_p[2] = src_p[2] * src_p[3];
+      dest_p[3] = src_p[3];
+      dest_p += 4;
+      src_p += 4;
+   }
+}
+
+MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src)
+{
+   float *dest_p, *src_p;
+   int i;
+   
+   assert(src->size > 0 && src->type == M_FLOAT && src->comp == 4);
+
+   m_image_create(dest, M_FLOAT, src->width, src->height, 4);
+   dest_p = (float *)dest->data;
+   src_p = (float *)src->data;
+
+   for (i = 0; i < src->size; i+=4) {
+      float x = 1.0 / src_p[3];
+      dest_p[0] = src_p[0] * x;
+      dest_p[1] = src_p[1] * x;
+      dest_p[2] = src_p[2] * x;
+      dest_p[3] = src_p[3];
+      dest_p += 4;
+      src_p += 4;
+   }
 }
 
 MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src)

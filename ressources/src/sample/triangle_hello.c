@@ -22,53 +22,53 @@ char frag_src[] =
 
 void draw(void)
 {
-	float vertices[] = {
-		 0.0,  0.5, 0.0,
-		-0.5, -0.5, 0.0,
-		 0.5, -0.5, 0.0
-	};
+   float vertices[] = {
+       0.0,  0.5, 0.0,
+      -0.5, -0.5, 0.0,
+       0.5, -0.5, 0.0
+   };
 
-	glUseProgram(prog_object);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices);
-	glEnableVertexAttribArray(0);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+   glUseProgram(prog_object);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices);
+   glEnableVertexAttribArray(0);
+   glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void ctoy_begin(void)
 {
-	const char * version = (const char *)glGetString(GL_VERSION);
+   const char * version = (const char *)glGetString(GL_VERSION);
 
-	printf("<sample triangle_hello>\n");
-	printf("%s\n", version);
+   printf("<sample triangle_hello>\n");
+   printf("%s\n", version);
 
-	vert_shader = gu_shader_from_string(GL_VERTEX_SHADER, vert_src);
-	frag_shader = gu_shader_from_string(GL_FRAGMENT_SHADER, frag_src);
-	prog_object = glCreateProgram();
+   vert_shader = gu_shader_from_string(GL_VERTEX_SHADER, vert_src);
+   frag_shader = gu_shader_from_string(GL_FRAGMENT_SHADER, frag_src);
+   prog_object = glCreateProgram();
 
-	glAttachShader(prog_object, vert_shader);
-	glAttachShader(prog_object, frag_shader);
-	glBindAttribLocation(prog_object, 0, "aPosition");
-	glLinkProgram(prog_object);
+   glAttachShader(prog_object, vert_shader);
+   glAttachShader(prog_object, frag_shader);
+   glBindAttribLocation(prog_object, 0, "aPosition");
+   glLinkProgram(prog_object);
 
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glDisable(GL_TEXTURE_2D);
+   glDisable(GL_DEPTH_TEST);
 }
 
 void ctoy_end(void)
 {
-	glDeleteProgram(prog_object);
-	glDeleteShader(vert_shader);
-	glDeleteShader(frag_shader);
+   glDeleteProgram(prog_object);
+   glDeleteShader(vert_shader);
+   glDeleteShader(frag_shader);
 }
 
 void ctoy_main_loop()
 {
-	glViewport(0, 0, ctoy_window_width(), ctoy_window_height());
+   glViewport(0, 0, ctoy_window_width(), ctoy_window_height());
 
-	glClearColor(0, 0.2, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
+   glClearColor(0, 0.2, 0, 0);
+   glClear(GL_COLOR_BUFFER_BIT);
 
-	draw();
-	ctoy_swap_buffer(NULL);
+   draw();
+   ctoy_swap_buffer(NULL);
 }

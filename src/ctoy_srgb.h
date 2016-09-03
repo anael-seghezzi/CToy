@@ -156,7 +156,6 @@ static uint8_t _m_srgb_table[4096] = {
 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
 };
 
-
 static void m_image_float_to_srgb(struct m_image *dest, const struct m_image *src)
 {
    float *src_data;

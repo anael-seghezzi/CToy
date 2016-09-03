@@ -263,8 +263,8 @@ static int _ctoy_window_init(const char *title, int fullscreen)
    glfwMakeContextCurrent(_ctoy_window);
    
 #ifndef GLFW_INCLUDE_ES2
-	if (gladLoadGL() == 0)
-		return 0;
+   if (gladLoadGL() == 0)
+      return 0;
 #endif
 
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

@@ -88,6 +88,9 @@ MIAPI void m_image_rotate_180(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_mirror_x(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src);
 
+MIAPI void m_image_premultiply(struct m_image *dest, const struct m_image *src);
+MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src);
+
 /* float/half conversion */
 MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
