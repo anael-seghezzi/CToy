@@ -427,10 +427,10 @@ int _ctoy_tcc_init(void)
    _ctoy_src_count = 0;
 #endif
    _ctoy_tcc = tcc_new();
-    if (!_ctoy_tcc) {
-        fprintf(stderr, "ERROR TCC: could not create tcc state\n");
-        return 0;
-    }
+   if (!_ctoy_tcc) {
+      fprintf(stderr, "ERROR TCC: could not create tcc state\n");
+      return 0;
+   }
    
 #ifndef CTOY_PLAYER
    _ctoy_io_replace();
@@ -448,8 +448,8 @@ int _ctoy_tcc_init(void)
    sprintf(path, "%s/include/libc/winapi", _ctoy_dir);
    tcc_add_include_path(_ctoy_tcc, path);
    
-    /* compilation */
-    tcc_set_output_type(_ctoy_tcc, TCC_OUTPUT_MEMORY);
+   /* compilation */
+   tcc_set_output_type(_ctoy_tcc, TCC_OUTPUT_MEMORY);
    
 #ifdef WIN32
    tcc_add_library(_ctoy_tcc, "msvcrt");
@@ -466,16 +466,16 @@ int _ctoy_tcc_init(void)
    /* symbols */
    _ctoy_all_symbols();
    
-    /* relocate the code */
-    if (tcc_relocate(_ctoy_tcc, TCC_RELOCATE_AUTO) < 0)
-        return 0;
+   /* relocate the code */
+   if (tcc_relocate(_ctoy_tcc, TCC_RELOCATE_AUTO) < 0)
+      return 0;
 
     /* get entry symbol */
-    ctoy_begin = (void (*)(void))tcc_get_symbol(_ctoy_tcc, "ctoy_begin");
+   ctoy_begin = (void (*)(void))tcc_get_symbol(_ctoy_tcc, "ctoy_begin");
    ctoy_main_loop = (void (*)(void))tcc_get_symbol(_ctoy_tcc, "ctoy_main_loop");
    ctoy_end = (void (*)(void))tcc_get_symbol(_ctoy_tcc, "ctoy_end");
-    if (!ctoy_begin || !ctoy_main_loop || !ctoy_end)
-        return 0;
+   if (!ctoy_begin || !ctoy_main_loop || !ctoy_end)
+      return 0;
    
    return 1;
 }
@@ -500,8 +500,8 @@ void _ctoy_main_loop(void)
 
 int main(int argc, char **argv)
 {
-    _ctoy_get_directory(_ctoy_dir, argv[0]);
-    _ctoy_set_working_dir(_ctoy_dir);
+   _ctoy_get_directory(_ctoy_dir, argv[0]);
+   _ctoy_set_working_dir(_ctoy_dir);
 
    /* openal */
    _ctoy_oal_init();

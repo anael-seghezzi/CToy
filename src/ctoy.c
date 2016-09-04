@@ -274,8 +274,37 @@ static int _ctoy_window_init(const char *title, int fullscreen)
    return 1;
 }
 
+static void _ctoy_joy_update(int joy)
+{
+   const float *axis;
+   const unsigned char *button;
+   int axis_count, button_count;
+
+   axis = glfwGetJoystickAxes(joy, &axis_count);
+   button = glfwGetJoystickButtons(joy, &button_count);
+
+   if (axis) {
+      int c = M_MIN(axis_count, CTOY_JOY_AXIS_MAX);
+      _ctoy_joystick_axis_count[joy] = c;
+      memcpy(_ctoy_joystick_axis[joy], axis, c * sizeof(float));
+   }
+
+   if (button) {
+      int i, c = M_MIN(button_count, CTOY_JOY_BUTTON_MAX);
+      _ctoy_joystick_button_count[joy] = c;
+      for (i = 0; i < c; i++) {
+         int s0 = _ctoy_joystick_button[joy][i][1];
+         int s1 = button[i];
+         _ctoy_joystick_button[joy][i][0] = s1 - s0;
+         _ctoy_joystick_button[joy][i][1] = s1;
+      }
+   }
+}
+
 static int _ctoy_create(const char *title, int width, int height)
 {
+   int i;
+
    memset(_ctoy_button, 0, sizeof(_ctoy_button));
    memset(_ctoy_mouse_button, 0, sizeof(_ctoy_mouse_button));
    memset(_ctoy_joystick_button, 0, sizeof(_ctoy_joystick_button));
@@ -292,6 +321,10 @@ static int _ctoy_create(const char *title, int width, int height)
 
    if (! _ctoy_window_init(title, 0))
       return 0;
+
+   /* joysticks */
+   for (i = 0; i < CTOY_JOY_COUNT; i++)
+      _ctoy_joy_update(i);
 
    /* texture */
    glGenTextures(1, &_ctoy_texture);
@@ -344,33 +377,6 @@ static void _ctoy_destroy(void)
    glfwTerminate();
    _ctoy_window = NULL;
    m_image_destroy(&_ctoy_buffer_ubyte);
-}
-
-static void _ctoy_joy_update(int joy)
-{
-   const float *axis;
-   const unsigned char *button;
-   int axis_count, button_count;
-
-   axis = glfwGetJoystickAxes(joy, &axis_count);
-   button = glfwGetJoystickButtons(joy, &button_count);
-
-   if (axis) {
-      int c = M_MIN(axis_count, CTOY_JOY_AXIS_MAX);
-      _ctoy_joystick_axis_count[joy] = c;
-      memcpy(_ctoy_joystick_axis[joy], axis, c * sizeof(float));
-   }
-
-   if (button) {
-      int i, c = M_MIN(button_count, CTOY_JOY_BUTTON_MAX);
-      _ctoy_joystick_button_count[joy] = c;
-      for (i = 0; i < c; i++) {
-         int s0 = _ctoy_joystick_button[joy][i][1];
-         int s1 = button[i];
-         _ctoy_joystick_button[joy][i][0] = s1 - s0;
-         _ctoy_joystick_button[joy][i][1] = s1;
-      }
-   }
 }
 
 static void _ctoy_update(void)

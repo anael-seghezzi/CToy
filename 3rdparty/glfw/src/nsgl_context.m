@@ -167,7 +167,7 @@ GLFWbool _glfwCreateContextNSGL(_GLFWwindow* window,
     ADD_ATTR(NSOpenGLPFAAccelerated);
     ADD_ATTR(NSOpenGLPFAClosestPolicy);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if 0 //MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
     if (ctxconfig->major >= 4)
     {
         ADD_ATTR2(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core);

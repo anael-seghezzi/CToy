@@ -1,31 +1,43 @@
 ## Find source and headers
 
+FILE(GLOB HEADERS
+  include/GLFW/glfw3.h
+  include/GLFW/glfw3native.h
+)
+
 FILE(GLOB SOURCES
-  src/clipboard.c
   src/context.c
-  src/gamma.c
   src/init.c
   src/input.c
-  src/joystick.c
   src/monitor.c
-  src/time.c
+  src/vulkan.c  
   src/window.c
-  src/vulkan.c
-  src/egl_context.c
 )
 
 IF(WIN32)
-  FILE(GLOB OS_HEADERS src/win32_*.h src/wgl_*.h)
-  FILE(GLOB OS_SOURCES src/win32_*.c src/wgl_*.c)
+  FILE(GLOB OS_HEADERS src/win32_*.h src/wgl_*.h egl_context.h)
+  FILE(GLOB OS_SOURCES src/win32_*.c src/wgl_*.c egl_context.c)
   ADD_DEFINITIONS(-D_GLFW_WIN32)
-  ADD_DEFINITIONS(-D_GLFW_WGL)
 ENDIF(WIN32)
 
 IF(APPLE)
-  FILE(GLOB OS_HEADERS src/cocoa_*.h src/nsgl_*.h)
-  FILE(GLOB OS_SOURCES src/cocoa_*.c src/nsgl_*.c src/cocoa_*.m src/nsgl_*.m)
+  FILE(GLOB OS_HEADERS
+    src/cocoa_platform.h
+    src/cocoa_joystick.h
+    src/posix_tls.h
+    src/nsgl_context.h
+  )
+  FILE(GLOB OS_SOURCES
+    src/cocoa_init.m
+    src/cocoa_joystick.m
+    src/cocoa_monitor.m
+    src/cocoa_window.m
+    src/cocoa_time.c
+    src/posix_tls.c
+    src/nsgl_context.m
+  )
   ADD_DEFINITIONS(-D_GLFW_COCOA)
-  ADD_DEFINITIONS(-D_GLFW_NSGL)
+  set_source_files_properties(${OS_SOURCES} PROPERTIES LANGUAGE C)
 ENDIF(APPLE)
 
 IF(UNIX AND NOT APPLE)
@@ -37,13 +49,13 @@ IF(UNIX AND NOT APPLE)
 ENDIF(UNIX AND NOT APPLE)
 
 IF(CMAKE_HAS_SORT)
+  LIST(SORT HEADERS)
   LIST(SORT SOURCES)
   LIST(SORT OS_HEADERS)
   LIST(SORT OS_SOURCES)
 ENDIF(CMAKE_HAS_SORT)
 
 ## Build
-ADD_DEFINITIONS(-D_GLFW_USE_OPENGL)
 ADD_DEFINITIONS(-D_GLFW_USE_MENUBAR)
 ADD_DEFINITIONS(-D_GLFW_USE_CHDIR)
 
