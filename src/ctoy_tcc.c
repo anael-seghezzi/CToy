@@ -455,7 +455,7 @@ int _ctoy_tcc_init(void)
    tcc_add_library(_ctoy_tcc, "msvcrt");
    tcc_add_library(_ctoy_tcc, "opengl32");
    tcc_add_library(_ctoy_tcc, "OpenAL32");
-   tcc_set_options(_ctoy_tcc, "-Wl,--stack=8388608");
+   //tcc_set_options(_ctoy_tcc, "-Wl,--stack=8388608");
 #endif
    _ctoy_add_libs();
 
@@ -465,7 +465,7 @@ int _ctoy_tcc_init(void)
 
    /* symbols */
    _ctoy_all_symbols();
-   
+
    /* relocate the code */
    if (tcc_relocate(_ctoy_tcc, TCC_RELOCATE_AUTO) < 0)
       return 0;
@@ -476,7 +476,7 @@ int _ctoy_tcc_init(void)
    ctoy_end = (void (*)(void))tcc_get_symbol(_ctoy_tcc, "ctoy_end");
    if (!ctoy_begin || !ctoy_main_loop || !ctoy_end)
       return 0;
-   
+
    return 1;
 }
 
