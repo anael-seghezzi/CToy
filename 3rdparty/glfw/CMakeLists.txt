@@ -15,8 +15,8 @@ FILE(GLOB SOURCES
 )
 
 IF(WIN32)
-  FILE(GLOB OS_HEADERS src/win32_*.h src/wgl_*.h egl_context.h)
-  FILE(GLOB OS_SOURCES src/win32_*.c src/wgl_*.c egl_context.c)
+  FILE(GLOB OS_HEADERS src/win32_*.h src/wgl_*.h src/egl_context.h)
+  FILE(GLOB OS_SOURCES src/win32_*.c src/wgl_*.c src/egl_context.c)
   ADD_DEFINITIONS(-D_GLFW_WIN32)
 ENDIF(WIN32)
 
