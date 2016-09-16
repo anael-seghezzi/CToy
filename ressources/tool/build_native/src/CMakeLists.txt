@@ -1,8 +1,8 @@
 ## Find source and headers
 FILE(GLOB HEADERS
   *.h
-  ${MTCL_INCLUDE_DIR}/*.h
-  ${STB_INCLUDE_DIR}/*.h
+  "${MTCL_INCLUDE_DIR}/*.h"
+  "${STB_INCLUDE_DIR}/*.h"
 )
 FILE(GLOB SOURCES
   ctoy_native.c

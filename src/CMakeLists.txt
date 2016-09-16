@@ -1,8 +1,8 @@
 ## Find source and headers
 FILE(GLOB HEADERS
   *.h
-  ${MTCL_INCLUDE_DIR}/*.h
-  ${STB_INCLUDE_DIR}/*.h
+  "${MTCL_INCLUDE_DIR}/*.h"
+  "${STB_INCLUDE_DIR}/*.h"
 )
 FILE(GLOB SOURCES
   ctoy_tcc.c
@@ -100,8 +100,8 @@ INSTALL(DIRECTORY ../ressources/include DESTINATION ${MTCL_INSTALL_DIR})
 INSTALL(DIRECTORY ../ressources/src DESTINATION ${MTCL_INSTALL_DIR})
 INSTALL(DIRECTORY ../ressources/tool DESTINATION ${MTCL_INSTALL_DIR})
 FILE(GLOB SRC_CORE ../src/ctoy_srgb.h ../src/ctoy.* ../src/m_* ../src/stb_*)
-INSTALL(FILES ${SRC_CORE} DESTINATION ${MTCL_INSTALL_DIR}/tool/build_native/src)
-INSTALL(DIRECTORY ../3rdparty DESTINATION ${MTCL_INSTALL_DIR}/tool/build_native)
+INSTALL(FILES ${SRC_CORE} DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/src")
+INSTALL(DIRECTORY ../3rdparty DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native")
 
 IF(APPLE)
   SET_TARGET_PROPERTIES(
