@@ -25,8 +25,8 @@
 
 ========================================================================*/
 
-#ifndef _CTOY_H_
-#define _CTOY_H_
+#ifndef CTOY_H
+#define CTOY_H
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -29,27 +29,27 @@
 #include "../../../src/main.c"
 
 
-static void _ctoy_main_loop(void)
+static void ctoy__main_loop(void)
 {
    ctoy_main_loop();
-   _ctoy_update();
+   ctoy__update();
 }
 
 int main(int argc, char **argv)
 {
 #ifndef __EMSCRIPTEN__
    char dir[256];
-   _ctoy_get_directory(dir, argv[0]);
-   _ctoy_set_working_dir(dir);
+   ctoy__get_directory(dir, argv[0]);
+   ctoy__set_working_dir(dir);
 #endif
 
    /* openal */
-   _ctoy_oal_init();
+   ctoy__oal_init();
 
    /* window */
-   if (! _ctoy_create("CTOY", 512, 512)) {
+   if (! ctoy__create("CTOY", 512, 512)) {
       printf("ERROR CTOY: could not create window\n");
-      _ctoy_oal_destroy();
+      ctoy__oal_destroy();
       return EXIT_FAILURE;
    }
 
@@ -57,10 +57,10 @@ int main(int argc, char **argv)
    ctoy_begin();
 
 #ifdef __EMSCRIPTEN__
-   emscripten_set_main_loop(_ctoy_main_loop, 0, 1);
+   emscripten_set_main_loop(ctoy__main_loop, 0, 1);
 #else
-   while (_ctoy_state) {
-      _ctoy_main_loop();
+   while (ctoy__state) {
+      ctoy__main_loop();
       thrd_yield();
    }
 #endif
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
    ctoy_end();
 
    /* clear */
-   _ctoy_destroy();
-   _ctoy_oal_destroy();
+   ctoy__destroy();
+   ctoy__oal_destroy();
    return EXIT_SUCCESS;
 }

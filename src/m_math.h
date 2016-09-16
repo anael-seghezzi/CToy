@@ -215,8 +215,8 @@ MMAPI float m_3d_ray_triangle_intersection(float3 *ray_origin, float3 *ray_direc
 #include <math.h>
 #endif
 
-static unsigned int _m_rz = 362436069;
-static unsigned int _m_rw = 521288629;
+static unsigned int m__rz = 362436069;
+static unsigned int m__rw = 521288629;
 
 MMAPI unsigned int m_next_power_of_two(unsigned int x)
 {
@@ -234,15 +234,15 @@ MMAPI unsigned int m_next_power_of_two(unsigned int x)
 
 MMAPI void m_srand(unsigned int z, unsigned int w)
 {
-   _m_rz = z;
-   _m_rw = w;
+   m__rz = z;
+   m__rw = w;
 }
 
 MMAPI unsigned int m_rand(void)
 {
-   _m_rz = 36969 * (_m_rz & 65535) + (_m_rz >> 16);
-   _m_rw = 18000 * (_m_rw & 65535) + (_m_rw >> 16);
-   return (_m_rz << 16) + _m_rw;
+   m__rz = 36969 * (m__rz & 65535) + (m__rz >> 16);
+   m__rw = 18000 * (m__rw & 65535) + (m__rw >> 16);
+   return (m__rz << 16) + m__rw;
 }
 
 MMAPI float m_randf(void)
@@ -846,7 +846,7 @@ MMAPI int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direc
    float3 tmin, tmax;
    float3 tnear, tfar;
    float tnx, tny, tfy;
-   float _in, _out;
+   float in0, out0;
 
    idir.x = 1.0f / ray_direction->x;
    idir.y = 1.0f / ray_direction->y;
@@ -865,12 +865,12 @@ MMAPI int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direc
    tny = M_MAX(tnear.y, tnear.z);
    tfy = M_MIN(tfar.y, tfar.z);
 
-   _in = M_MAX(tnx, tny);
-   _out = M_MIN(tfar.x, tfy);
+   in0 = M_MAX(tnx, tny);
+   out0 = M_MIN(tfar.x, tfy);
     
-   if (_out > 0.0f && _in < _out) {
-      *in = _in;
-      *out = _out;
+   if (out0 > 0.0f && in0 < out0) {
+      *in = in0;
+      *out = out0;
       return 1;
    }
    return 0;
@@ -1018,7 +1018,7 @@ MMAPI float m_3d_ray_triangle_intersection(float3 *ray_origin, float3 *ray_direc
    if (x2 > max) max=x2;
 #endif
 
-static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
+static int m__plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
 {
    float3 vmin, vmax;
    if (normal->x > 0.0f) { vmin.x = -maxbox->x - vert->x; vmax.x =  maxbox->x - vert->x; }
@@ -1033,14 +1033,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
 }
 
 /*======================== X-tests ========================*/
-#define _M_AXISTEST_X01(a, b, fa, fb)\
+#define M_AXISTEST_X01(a, b, fa, fb)\
    p0 = a*v0.y - b*v0.z;\
    p2 = a*v2.y - b*v2.z;\
    if(p0<p2) {min=p0; max=p2;} else {min=p2; max=p0;}\
    rad = fa * boxhalfsize->y + fb * boxhalfsize->z;\
    if(min>rad || max<-rad) return 0;
 
-#define _M_AXISTEST_X2(a, b, fa, fb)\
+#define M_AXISTEST_X2(a, b, fa, fb)\
    p0 = a*v0.y - b*v0.z;\
    p1 = a*v1.y - b*v1.z;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1048,14 +1048,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
    if(min>rad || max<-rad) return 0;
 
 /*======================== Y-tests ========================*/
-#define _M_AXISTEST_Y02(a, b, fa, fb)\
+#define M_AXISTEST_Y02(a, b, fa, fb)\
    p0 = -a*v0.x + b*v0.z;\
    p2 = -a*v2.x + b*v2.z;\
    if(p0<p2) {min=p0; max=p2;} else {min=p2; max=p0;}\
    rad = fa * boxhalfsize->x + fb * boxhalfsize->z;\
    if(min>rad || max<-rad) return 0;
 
-#define _M_AXISTEST_Y1(a, b, fa, fb)\
+#define M_AXISTEST_Y1(a, b, fa, fb)\
    p0 = -a*v0.x + b*v0.z;\
    p1 = -a*v1.x + b*v1.z;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1063,14 +1063,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
    if(min>rad || max<-rad) return 0;
 
 /*======================== Z-tests ========================*/
-#define _M_AXISTEST_Z12(a, b, fa, fb)\
+#define M_AXISTEST_Z12(a, b, fa, fb)\
    p1 = a*v1.x - b*v1.y;\
    p2 = a*v2.x - b*v2.y;\
    if(p2<p1) {min=p2; max=p1;} else {min=p1; max=p2;}\
    rad = fa * boxhalfsize->x + fb * boxhalfsize->y;\
    if(min>rad || max<-rad) return 0;
 
-#define _M_AXISTEST_Z0(a, b, fa, fb)\
+#define M_AXISTEST_Z0(a, b, fa, fb)\
    p0 = a*v0.x - b*v0.y;\
    p1 = a*v1.x - b*v1.y;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1107,23 +1107,23 @@ MMAPI int m_3d_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *v
    fex = M_ABS(e0.x);
    fey = M_ABS(e0.y);
    fez = M_ABS(e0.z);
-   _M_AXISTEST_X01(e0.z, e0.y, fez, fey);
-   _M_AXISTEST_Y02(e0.z, e0.x, fez, fex);
-   _M_AXISTEST_Z12(e0.y, e0.x, fey, fex);
+   M_AXISTEST_X01(e0.z, e0.y, fez, fey);
+   M_AXISTEST_Y02(e0.z, e0.x, fez, fex);
+   M_AXISTEST_Z12(e0.y, e0.x, fey, fex);
 
    fex = M_ABS(e1.x);
    fey = M_ABS(e1.y);
    fez = M_ABS(e1.z);
-   _M_AXISTEST_X01(e1.z, e1.y, fez, fey);
-   _M_AXISTEST_Y02(e1.z, e1.x, fez, fex);
-   _M_AXISTEST_Z0(e1.y, e1.x, fey, fex);
+   M_AXISTEST_X01(e1.z, e1.y, fez, fey);
+   M_AXISTEST_Y02(e1.z, e1.x, fez, fex);
+   M_AXISTEST_Z0(e1.y, e1.x, fey, fex);
 
    fex = M_ABS(e2.x);
    fey = M_ABS(e2.y);
    fez = M_ABS(e2.z);
-   _M_AXISTEST_X2(e2.z, e2.y, fez, fey);
-   _M_AXISTEST_Y1(e2.z, e2.x, fez, fex);
-   _M_AXISTEST_Z12(e2.y, e2.x, fey, fex);
+   M_AXISTEST_X2(e2.z, e2.y, fez, fey);
+   M_AXISTEST_Y1(e2.z, e2.x, fez, fex);
+   M_AXISTEST_Z12(e2.y, e2.x, fey, fex);
 
    /* Bullet 1: */
    /*  first test overlap in the {x,y,z}-directions */
@@ -1147,9 +1147,16 @@ MMAPI int m_3d_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *v
    /*  test if the box intersects the plane of the triangle */
    /*  compute plane equation of triangle: normal*x+d=0 */
    M_CROSS3(normal, e0, e1);
-   if (! _m_plane_box_overlap(&normal, &v0, boxhalfsize)) return 0;
+   if (! m__plane_box_overlap(&normal, &v0, boxhalfsize)) return 0;
 
    return 1;   /* box and triangle overlaps */
 }
+
+#undef M_AXISTEST_X01
+#undef M_AXISTEST_X2
+#undef M_AXISTEST_Y02
+#undef M_AXISTEST_Y1
+#undef M_AXISTEST_Z12
+#undef M_AXISTEST_Z0
 
 #endif /* M_MATH_IMPLEMENTATION */

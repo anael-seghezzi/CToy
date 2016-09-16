@@ -78,8 +78,6 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
 #define M_ABS(a) (((a) < 0) ? -(a) : (a))
 #endif
 
-#define _M_IS_IN_FRAME(x, y, w, h) (x >= 0 && x < w && y >= 0 && y < h)
-
 #ifndef M_FIND_MIN_MAX_3
 #define M_FIND_MIN_MAX_3(x0, x1, x2, min, max)\
    min = max = x0;\
@@ -232,7 +230,7 @@ MRAPI void m_raster_line(float *dest, int width, int height, int comp, float *p0
 
    while (1) {
 
-      if (_M_IS_IN_FRAME(x0, y0, w, h)) { /* safe, but should be taken out of the loop for speed (clipping ?) */
+      if (x0 > -1 && y0 > -1 && x0 < w && y0 < h) { /* safe, but should be taken out of the loop for speed (clipping ?) */
          float *pixel = data + (y0 * w + x0) * comp; int c;
          for (c = 0; c < comp; c++)
             pixel[c] = color[c];
@@ -250,12 +248,12 @@ MRAPI void m_raster_line(float *dest, int width, int height, int comp, float *p0
 // Midpoint Circle Algorithm : http://en[3]ikipedia.org/wiki/Midpoint_circle_algorithm
 MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *p, float r, float *color)
 {
-   #define _M_CIRCLE_PIXEL(px, py)\
+   #define M_CIRCLE_PIXEL(px, py)\
    {\
-      int _x = px;\
-      int _y = py;\
-      if (_M_IS_IN_FRAME(_x, _y, w, h)) {\
-         float *pixel = data + (_y * w + _x) * comp; int c;\
+      int x2 = px;\
+      int y2 = py;\
+      if (x2 > -1 && y2 > -1 && x2 < w && y2 < h) {\
+         float *pixel = data + (y2 * w + x2) * comp; int c;\
          for (c = 0; c < comp; c++)\
             pixel[c] = color[c];\
       }\
@@ -272,14 +270,14 @@ MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *
  
    while (x >= y) {
 
-      _M_CIRCLE_PIXEL( x + x0,  y + y0)
-      _M_CIRCLE_PIXEL( y + x0,  x + y0)
-      _M_CIRCLE_PIXEL(-x + x0,  y + y0)
-      _M_CIRCLE_PIXEL(-y + x0,  x + y0)
-      _M_CIRCLE_PIXEL(-x + x0, -y + y0)
-      _M_CIRCLE_PIXEL(-y + x0, -x + y0)
-      _M_CIRCLE_PIXEL( x + x0, -y + y0)
-      _M_CIRCLE_PIXEL( y + x0, -x + y0)
+      M_CIRCLE_PIXEL( x + x0,  y + y0)
+      M_CIRCLE_PIXEL( y + x0,  x + y0)
+      M_CIRCLE_PIXEL(-x + x0,  y + y0)
+      M_CIRCLE_PIXEL(-y + x0,  x + y0)
+      M_CIRCLE_PIXEL(-x + x0, -y + y0)
+      M_CIRCLE_PIXEL(-y + x0, -x + y0)
+      M_CIRCLE_PIXEL( x + x0, -y + y0)
+      M_CIRCLE_PIXEL( y + x0, -x + y0)
       y++;
         
       if (radius_error < 0)
@@ -290,7 +288,7 @@ MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *
       }
    }
 
-   #undef _M_CIRCLE_PIXEL
+   #undef M_CIRCLE_PIXEL
 }
 
 /* adapted from : http://alienryderflex.com/polygon_fill/

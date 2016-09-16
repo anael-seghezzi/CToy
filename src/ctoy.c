@@ -77,17 +77,17 @@
 
 
 /* system */
-char           _ctoy_title[256];
-struct m_image _ctoy_buffer_ubyte = M_IMAGE_IDENTITY();
-unsigned long  _ctoy_t = 0;
-void *         _ctoy_memory = NULL;
-GLFWwindow *   _ctoy_window = NULL;
-GLuint         _ctoy_texture;
-int            _ctoy_state = 1;
-int            _ctoy_win_width = 0;
-int            _ctoy_win_height = 0;
-int            _ctoy_tex_width = 0;
-int            _ctoy_tex_height = 0;
+char           ctoy__title[256];
+struct m_image ctoy__buffer_ubyte = M_IMAGE_IDENTITY();
+unsigned long  ctoy__t = 0;
+void *         ctoy__memory = NULL;
+GLFWwindow *   ctoy__window = NULL;
+GLuint         ctoy__texture;
+int            ctoy__state = 1;
+int            ctoy__win_width = 0;
+int            ctoy__win_height = 0;
+int            ctoy__tex_width = 0;
+int            ctoy__tex_height = 0;
 
 /* input */
 #define        CTOY_MOUSE_BUTTON_COUNT (GLFW_MOUSE_BUTTON_LAST+1)
@@ -95,23 +95,23 @@ int            _ctoy_tex_height = 0;
 #define        CTOY_JOY_COUNT (GLFW_JOYSTICK_LAST+1)
 #define        CTOY_JOY_AXIS_MAX 32
 #define        CTOY_JOY_BUTTON_MAX 32
-char           _ctoy_button[CTOY_KEY_COUNT][2];
-char           _ctoy_mouse_button[CTOY_MOUSE_BUTTON_COUNT][2];
-char           _ctoy_joystick_button[CTOY_JOY_COUNT][CTOY_JOY_BUTTON_MAX][2];
-float          _ctoy_joystick_axis[CTOY_JOY_COUNT][CTOY_JOY_AXIS_MAX];
-char           _ctoy_joystick_button_count[CTOY_JOY_COUNT];
-char           _ctoy_joystick_axis_count[CTOY_JOY_COUNT];
-unsigned int   _ctoy_char_queue[CTOY_CHAR_MAX];
-int            _ctoy_char_count = 0;
-float          _ctoy_mouse_x = 0;
-float          _ctoy_mouse_y = 0;
+char           ctoy__button[CTOY_KEY_COUNT][2];
+char           ctoy__mouse_button[CTOY_MOUSE_BUTTON_COUNT][2];
+char           ctoy__joystick_button[CTOY_JOY_COUNT][CTOY_JOY_BUTTON_MAX][2];
+float          ctoy__joystick_axis[CTOY_JOY_COUNT][CTOY_JOY_AXIS_MAX];
+char           ctoy__joystick_button_count[CTOY_JOY_COUNT];
+char           ctoy__joystick_axis_count[CTOY_JOY_COUNT];
+unsigned int   ctoy__char_queue[CTOY_CHAR_MAX];
+int            ctoy__char_count = 0;
+float          ctoy__mouse_x = 0;
+float          ctoy__mouse_y = 0;
 
 /* sound */
-ALCdevice *    _ctoy_oal_device = NULL;
-ALCcontext *   _ctoy_oal_context = NULL;
+ALCdevice *    ctoy__oal_device = NULL;
+ALCcontext *   ctoy__oal_context = NULL;
 
 /* shader */
-static char _ctoy_vert_src[] =
+static char ctoy__vert_src[] =
 "attribute vec2 aVertex;\n"
 "varying vec2 vTexcoord;"
 "void main()"
@@ -121,7 +121,7 @@ static char _ctoy_vert_src[] =
 " gl_Position = vec4(p.x*2.0, p.y*2.0, 0.0, 1.0); \n"
 "}";                             
 
-static char _ctoy_frag_src[] =
+static char ctoy__frag_src[] =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
@@ -132,53 +132,53 @@ static char _ctoy_frag_src[] =
 " gl_FragColor = texture2D(uTexture0, vTexcoord);"
 "}";
 
-static GLuint _ctoy_vert_shader;
-static GLuint _ctoy_frag_shader;
-static GLuint _ctoy_prog_object;
+static GLuint ctoy__vert_shader;
+static GLuint ctoy__frag_shader;
+static GLuint ctoy__prog_object;
 
 
-static void _ctoy_close_callback(GLFWwindow * window)
+static void ctoy__close_callback(GLFWwindow * window)
 {
-   _ctoy_state = 0;
+   ctoy__state = 0;
 }
 
-static void _ctoy_size_callback(GLFWwindow * window, int width, int height)
+static void ctoy__size_callback(GLFWwindow * window, int width, int height)
 {
-   _ctoy_win_width = width;
-   _ctoy_win_height = height;
+   ctoy__win_width = width;
+   ctoy__win_height = height;
 }
 
-static void _ctoy_cursorpos_callback(GLFWwindow * window, double x, double y)
+static void ctoy__cursorpos_callback(GLFWwindow * window, double x, double y)
 {
-   _ctoy_mouse_x = (float)x / (float)_ctoy_win_width;
-   _ctoy_mouse_y = (float)y / (float)_ctoy_win_height;
+   ctoy__mouse_x = (float)x / (float)ctoy__win_width;
+   ctoy__mouse_y = (float)y / (float)ctoy__win_height;
 }
 
-static void _ctoy_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void ctoy__key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
    if (key >=0 && key < CTOY_KEY_COUNT) {
-      _ctoy_button[key][0] = action + 1;
-      _ctoy_button[key][1] = action;
+      ctoy__button[key][0] = action + 1;
+      ctoy__button[key][1] = action;
    }
 }
 
-static void _ctoy_mousebutton_callback(GLFWwindow * window, int button, int action, int mods)
+static void ctoy__mousebutton_callback(GLFWwindow * window, int button, int action, int mods)
 {
    if (button >=0 && button < CTOY_MOUSE_BUTTON_COUNT) {
-      _ctoy_mouse_button[button][0] = action + 1;
-      _ctoy_mouse_button[button][1] = action;
+      ctoy__mouse_button[button][0] = action + 1;
+      ctoy__mouse_button[button][1] = action;
    }
 }
 
-static void _ctoy_char_callback(GLFWwindow * window, unsigned int key)
+static void ctoy__char_callback(GLFWwindow * window, unsigned int key)
 {
-   if (_ctoy_char_count < CTOY_CHAR_MAX) {
-      _ctoy_char_queue[_ctoy_char_count] = key;
-      _ctoy_char_count++;
+   if (ctoy__char_count < CTOY_CHAR_MAX) {
+      ctoy__char_queue[ctoy__char_count] = key;
+      ctoy__char_count++;
    }
 }
 
-static GLuint _ctoy_shader(GLenum type, const char *src)
+static GLuint ctoy__shader(GLenum type, const char *src)
 {
     GLuint shader; GLint compiled;
 
@@ -195,33 +195,33 @@ static GLuint _ctoy_shader(GLenum type, const char *src)
     return shader;
 }
 
-static void _ctoy_draw_texture(GLuint texture)
+static void ctoy__draw_texture(GLuint texture)
 {
   float vertices[8] = {0, 0, 0, 1, 1, 0, 1, 1};
 
   glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glUseProgram(_ctoy_prog_object);
+  glUseProgram(ctoy__prog_object);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, vertices);
   glEnableVertexAttribArray(0);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glUseProgram(0);
 }
 
-static void _ctoy_setup_texture(int width, int height)
+static void ctoy__setup_texture(int width, int height)
 {
-  glBindTexture(GL_TEXTURE_2D, _ctoy_texture);
+  glBindTexture(GL_TEXTURE_2D, ctoy__texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-  _ctoy_tex_width = width;
-  _ctoy_tex_height = height;
+  ctoy__tex_width = width;
+  ctoy__tex_height = height;
 }
 
-static int _ctoy_window_init(const char *title, int fullscreen)
+static int ctoy__window_init(const char *title, int fullscreen)
 {
    GLFWmonitor *monitor = NULL;
    GLFWwindow *win;
@@ -236,31 +236,31 @@ static int _ctoy_window_init(const char *title, int fullscreen)
       glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
       glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
       
-      _ctoy_win_width = mode->width;
-      _ctoy_win_height = mode->height;
+      ctoy__win_width = mode->width;
+      ctoy__win_height = mode->height;
    }
    
 #ifdef GLFW_INCLUDE_ES2
    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 #endif
 
-   win = glfwCreateWindow(_ctoy_win_width, _ctoy_win_height, title, monitor, _ctoy_window);
+   win = glfwCreateWindow(ctoy__win_width, ctoy__win_height, title, monitor, ctoy__window);
    if (win == NULL)
       return 0;
    
-   if (_ctoy_window)
-      glfwDestroyWindow(_ctoy_window);
+   if (ctoy__window)
+      glfwDestroyWindow(ctoy__window);
       
-   _ctoy_window = win;
-   sprintf(_ctoy_title, "%s", title);
+   ctoy__window = win;
+   sprintf(ctoy__title, "%s", title);
    
-   glfwSetWindowCloseCallback(_ctoy_window, _ctoy_close_callback);
-   glfwSetWindowSizeCallback(_ctoy_window, _ctoy_size_callback);
-   glfwSetKeyCallback(_ctoy_window, _ctoy_key_callback);
-   glfwSetMouseButtonCallback(_ctoy_window, _ctoy_mousebutton_callback);
-   glfwSetCharCallback(_ctoy_window, _ctoy_char_callback);
-   glfwSetCursorPosCallback(_ctoy_window, _ctoy_cursorpos_callback);
-   glfwMakeContextCurrent(_ctoy_window);
+   glfwSetWindowCloseCallback(ctoy__window, ctoy__close_callback);
+   glfwSetWindowSizeCallback(ctoy__window, ctoy__size_callback);
+   glfwSetKeyCallback(ctoy__window, ctoy__key_callback);
+   glfwSetMouseButtonCallback(ctoy__window, ctoy__mousebutton_callback);
+   glfwSetCharCallback(ctoy__window, ctoy__char_callback);
+   glfwSetCursorPosCallback(ctoy__window, ctoy__cursorpos_callback);
+   glfwMakeContextCurrent(ctoy__window);
    
 #ifndef GLFW_INCLUDE_ES2
    if (gladLoadGL() == 0)
@@ -274,7 +274,7 @@ static int _ctoy_window_init(const char *title, int fullscreen)
    return 1;
 }
 
-static void _ctoy_joy_update(int joy)
+static void ctoy__joy_update(int joy)
 {
    const float *axis;
    const unsigned char *button;
@@ -285,68 +285,68 @@ static void _ctoy_joy_update(int joy)
 
    if (axis) {
       int c = M_MIN(axis_count, CTOY_JOY_AXIS_MAX);
-      _ctoy_joystick_axis_count[joy] = c;
-      memcpy(_ctoy_joystick_axis[joy], axis, c * sizeof(float));
+      ctoy__joystick_axis_count[joy] = c;
+      memcpy(ctoy__joystick_axis[joy], axis, c * sizeof(float));
    }
 
    if (button) {
       int i, c = M_MIN(button_count, CTOY_JOY_BUTTON_MAX);
-      _ctoy_joystick_button_count[joy] = c;
+      ctoy__joystick_button_count[joy] = c;
       for (i = 0; i < c; i++) {
-         int s0 = _ctoy_joystick_button[joy][i][1];
+         int s0 = ctoy__joystick_button[joy][i][1];
          int s1 = button[i];
-         _ctoy_joystick_button[joy][i][0] = s1 - s0;
-         _ctoy_joystick_button[joy][i][1] = s1;
+         ctoy__joystick_button[joy][i][0] = s1 - s0;
+         ctoy__joystick_button[joy][i][1] = s1;
       }
    }
 }
 
-static int _ctoy_create(const char *title, int width, int height)
+static int ctoy__create(const char *title, int width, int height)
 {
    int i;
 
-   memset(_ctoy_button, 0, sizeof(_ctoy_button));
-   memset(_ctoy_mouse_button, 0, sizeof(_ctoy_mouse_button));
-   memset(_ctoy_joystick_button, 0, sizeof(_ctoy_joystick_button));
-   memset(_ctoy_joystick_axis, 0, sizeof(_ctoy_joystick_axis));
-   memset(_ctoy_joystick_button_count, 0, sizeof(_ctoy_joystick_button_count));
-   memset(_ctoy_joystick_axis_count, 0, sizeof(_ctoy_joystick_axis_count));
+   memset(ctoy__button, 0, sizeof(ctoy__button));
+   memset(ctoy__mouse_button, 0, sizeof(ctoy__mouse_button));
+   memset(ctoy__joystick_button, 0, sizeof(ctoy__joystick_button));
+   memset(ctoy__joystick_axis, 0, sizeof(ctoy__joystick_axis));
+   memset(ctoy__joystick_button_count, 0, sizeof(ctoy__joystick_button_count));
+   memset(ctoy__joystick_axis_count, 0, sizeof(ctoy__joystick_axis_count));
 
    glfwInit();
 
-   _ctoy_win_width = width;
-   _ctoy_win_height = height;
-   _ctoy_tex_width = width;
-   _ctoy_tex_height = height;
+   ctoy__win_width = width;
+   ctoy__win_height = height;
+   ctoy__tex_width = width;
+   ctoy__tex_height = height;
 
-   if (! _ctoy_window_init(title, 0))
+   if (! ctoy__window_init(title, 0))
       return 0;
 
    /* joysticks */
    for (i = 0; i < CTOY_JOY_COUNT; i++)
-      _ctoy_joy_update(i);
+      ctoy__joy_update(i);
 
    /* texture */
-   glGenTextures(1, &_ctoy_texture);
-   _ctoy_setup_texture(_ctoy_tex_width, _ctoy_tex_height);
+   glGenTextures(1, &ctoy__texture);
+   ctoy__setup_texture(ctoy__tex_width, ctoy__tex_height);
 
    /* shader */
-   _ctoy_vert_shader = _ctoy_shader(GL_VERTEX_SHADER, _ctoy_vert_src);
-   _ctoy_frag_shader = _ctoy_shader(GL_FRAGMENT_SHADER, _ctoy_frag_src);
-   _ctoy_prog_object = glCreateProgram();
+   ctoy__vert_shader = ctoy__shader(GL_VERTEX_SHADER, ctoy__vert_src);
+   ctoy__frag_shader = ctoy__shader(GL_FRAGMENT_SHADER, ctoy__frag_src);
+   ctoy__prog_object = glCreateProgram();
 
-   glAttachShader(_ctoy_prog_object, _ctoy_vert_shader);
-   glAttachShader(_ctoy_prog_object, _ctoy_frag_shader);
-   glBindAttribLocation(_ctoy_prog_object, 0, "aVertex");
-   glLinkProgram(_ctoy_prog_object);
+   glAttachShader(ctoy__prog_object, ctoy__vert_shader);
+   glAttachShader(ctoy__prog_object, ctoy__frag_shader);
+   glBindAttribLocation(ctoy__prog_object, 0, "aVertex");
+   glLinkProgram(ctoy__prog_object);
 
-   glUseProgram(_ctoy_prog_object);
-   glUniform1i(glGetUniformLocation(_ctoy_prog_object, "uTexture0"), 0);
+   glUseProgram(ctoy__prog_object);
+   glUniform1i(glGetUniformLocation(ctoy__prog_object, "uTexture0"), 0);
 
    return 1;
 }
 
-static void _ctoy_get_directory(char *dest, const char *src)
+static void ctoy__get_directory(char *dest, const char *src)
 {
    char *s;
    strcpy(dest, src);
@@ -358,7 +358,7 @@ static void _ctoy_get_directory(char *dest, const char *src)
    if (s) *s = '\0';
 }
 
-static void _ctoy_set_working_dir(const char *dir)
+static void ctoy__set_working_dir(const char *dir)
 {
 #ifdef WIN32
    SetCurrentDirectory(dir);
@@ -367,55 +367,55 @@ static void _ctoy_set_working_dir(const char *dir)
 #endif
 }
 
-static void _ctoy_destroy(void)
+static void ctoy__destroy(void)
 {
-   glDeleteProgram(_ctoy_prog_object);
-   glDeleteShader(_ctoy_frag_shader);
-   glDeleteShader(_ctoy_vert_shader);
-   glDeleteTextures(1, &_ctoy_texture);
+   glDeleteProgram(ctoy__prog_object);
+   glDeleteShader(ctoy__frag_shader);
+   glDeleteShader(ctoy__vert_shader);
+   glDeleteTextures(1, &ctoy__texture);
    glfwMakeContextCurrent(NULL);
    glfwTerminate();
-   _ctoy_window = NULL;
-   m_image_destroy(&_ctoy_buffer_ubyte);
+   ctoy__window = NULL;
+   m_image_destroy(&ctoy__buffer_ubyte);
 }
 
-static void _ctoy_update(void)
+static void ctoy__update(void)
 {
    int i;
 
    /* joystick */
    for (i = 0; i < CTOY_JOY_COUNT; i++)
-      _ctoy_joy_update(i);
+      ctoy__joy_update(i);
 
    /* flush events */
    for (i = 0; i < CTOY_KEY_COUNT; i++)
-      _ctoy_button[i][0] = 0;
+      ctoy__button[i][0] = 0;
    for (i = 0; i < CTOY_MOUSE_BUTTON_COUNT; i++)
-      _ctoy_mouse_button[i][0] = 0; 
-   _ctoy_char_count = 0;
+      ctoy__mouse_button[i][0] = 0; 
+   ctoy__char_count = 0;
    glfwPollEvents();
 
-   _ctoy_t++;
+   ctoy__t++;
 }
 
-static int _ctoy_oal_init(void)
+static int ctoy__oal_init(void)
 {
-   _ctoy_oal_device = alcOpenDevice(NULL);
-   if(! _ctoy_oal_device)
+   ctoy__oal_device = alcOpenDevice(NULL);
+   if(! ctoy__oal_device)
    {
       printf("ERROR OpenAL: unable to create device\n");
         return 0;
    }
 
     // context
-   _ctoy_oal_context = alcCreateContext(_ctoy_oal_device, NULL);
-    if(! _ctoy_oal_context)
+   ctoy__oal_context = alcCreateContext(ctoy__oal_device, NULL);
+    if(! ctoy__oal_context)
    {
       printf("ERROR OpenAL: unable to create context\n");
         return 0;
    }
 
-   if(! alcMakeContextCurrent(_ctoy_oal_context))
+   if(! alcMakeContextCurrent(ctoy__oal_context))
    {
       printf("ERROR OpenAL: unable to make current context\n");
         return 0;
@@ -424,49 +424,49 @@ static int _ctoy_oal_init(void)
    return 1;
 }
 
-static void _ctoy_oal_destroy(void)
+static void ctoy__oal_destroy(void)
 {
    alcMakeContextCurrent(NULL);
-   alcDestroyContext(_ctoy_oal_context);
-   alcCloseDevice(_ctoy_oal_device);
+   alcDestroyContext(ctoy__oal_context);
+   alcCloseDevice(ctoy__oal_device);
 }
 
 
 int ctoy_get_chars(unsigned int dest[CTOY_CHAR_MAX])
 {
-   if (_ctoy_char_count > 0)
-      memcpy(dest, _ctoy_char_queue, _ctoy_char_count * sizeof(int));
-   return _ctoy_char_count;
+   if (ctoy__char_count > 0)
+      memcpy(dest, ctoy__char_queue, ctoy__char_count * sizeof(int));
+   return ctoy__char_count;
 }
 
 int ctoy_key_press(int key)
 {
-   return (_ctoy_button[key][0] == 2);
+   return (ctoy__button[key][0] == 2);
 }
 
 int ctoy_key_release(int key)
 {
-   return (_ctoy_button[key][0] == 1);
+   return (ctoy__button[key][0] == 1);
 }
 
 int ctoy_key_pressed(int key)
 {
-   return (_ctoy_button[key][1] > 0);
+   return (ctoy__button[key][1] > 0);
 }
 
 int ctoy_mouse_button_press(int button)
 {
-   return (_ctoy_mouse_button[button][0] == 2);
+   return (ctoy__mouse_button[button][0] == 2);
 }
 
 int ctoy_mouse_button_release(int button)
 {
-   return (_ctoy_mouse_button[button][0] == 1);
+   return (ctoy__mouse_button[button][0] == 1);
 }
 
 int ctoy_mouse_button_pressed(int button)
 {
-   return (_ctoy_mouse_button[button][1] > 0);
+   return (ctoy__mouse_button[button][1] > 0);
 }
 
 int ctoy_joystick_present(int joy)
@@ -476,56 +476,56 @@ int ctoy_joystick_present(int joy)
 
 int ctoy_joystick_axis_count(int joy)
 {
-   return _ctoy_joystick_axis_count[joy];
+   return ctoy__joystick_axis_count[joy];
 }
 
 int ctoy_joystick_button_count(int joy)
 {
-   return _ctoy_joystick_button_count[joy];
+   return ctoy__joystick_button_count[joy];
 }
 
 int ctoy_joystick_button_press(int joy, int button)
 {
-   return (_ctoy_joystick_button[joy][button][0] > 0);
+   return (ctoy__joystick_button[joy][button][0] > 0);
 }
 
 int ctoy_joystick_button_release(int joy, int button)
 {
-   return (_ctoy_joystick_button[joy][button][0] < 0);
+   return (ctoy__joystick_button[joy][button][0] < 0);
 }
 
 int ctoy_joystick_button_pressed(int joy, int button)
 {
-   return _ctoy_joystick_button[joy][button][1];
+   return ctoy__joystick_button[joy][button][1];
 }
 
 float ctoy_joystick_axis(int joy, int axis)
 {
-   return _ctoy_joystick_axis[joy][axis];
+   return ctoy__joystick_axis[joy][axis];
 }
 
 void ctoy_swap_buffer(struct m_image *image)
 {
    if (image) {
       
-      if (image->width != _ctoy_tex_width || image->height != _ctoy_tex_height)
-         _ctoy_setup_texture(image->width, image->height);
+      if (image->width != ctoy__tex_width || image->height != ctoy__tex_height)
+         ctoy__setup_texture(image->width, image->height);
 
-      glBindTexture(GL_TEXTURE_2D, _ctoy_texture);
+      glBindTexture(GL_TEXTURE_2D, ctoy__texture);
 
       if (image->type == M_FLOAT) {
-         m_image_float_to_srgb(&_ctoy_buffer_ubyte, image);
-         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _ctoy_buffer_ubyte.width, _ctoy_buffer_ubyte.height, GL_RGB, GL_UNSIGNED_BYTE, _ctoy_buffer_ubyte.data);
+         m_image_float_to_srgb(&ctoy__buffer_ubyte, image);
+         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ctoy__buffer_ubyte.width, ctoy__buffer_ubyte.height, GL_RGB, GL_UNSIGNED_BYTE, ctoy__buffer_ubyte.data);
       }
       else if (image->type == M_UBYTE) {
          glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, GL_RGB, GL_UNSIGNED_BYTE, image->data);
       }
    
-      glViewport(0, 0, _ctoy_win_width, _ctoy_win_height);
-      _ctoy_draw_texture(_ctoy_texture);
+      glViewport(0, 0, ctoy__win_width, ctoy__win_height);
+      ctoy__draw_texture(ctoy__texture);
    }
    
-   glfwSwapBuffers(_ctoy_window);
+   glfwSwapBuffers(ctoy__window);
 }
 
 double ctoy_get_time(void)
@@ -535,65 +535,65 @@ double ctoy_get_time(void)
 
 void ctoy_window_title(const char *title)
 {
-   glfwSetWindowTitle(_ctoy_window, title);
-   sprintf(_ctoy_title, "%s", title);
+   glfwSetWindowTitle(ctoy__window, title);
+   sprintf(ctoy__title, "%s", title);
 }
 
 void ctoy_window_size(int width, int height)
 {
-   glfwSetWindowSize(_ctoy_window, width, height);
-   _ctoy_win_width = width;
-   _ctoy_win_height = height;
+   glfwSetWindowSize(ctoy__window, width, height);
+   ctoy__win_width = width;
+   ctoy__win_height = height;
 }
 
 void ctoy_window_fullscreen(int fullscreen)
 {
-   _ctoy_window_init(_ctoy_title, fullscreen);
+   ctoy__window_init(ctoy__title, fullscreen);
 }
 
 unsigned long ctoy_t(void)
 {
-   return _ctoy_t;
+   return ctoy__t;
 }
 
 int ctoy_window_width(void)
 {
-   return _ctoy_win_width;
+   return ctoy__win_width;
 }
 
 int ctoy_window_height(void)
 {
-   return _ctoy_win_height;
+   return ctoy__win_height;
 }
 
 int ctoy_width(void)
 {
-   return _ctoy_tex_width;
+   return ctoy__tex_width;
 }
 
 int ctoy_height(void)
 {
-   return _ctoy_tex_height;
+   return ctoy__tex_height;
 }
 
 float ctoy_mouse_x(void)
 {
-   return _ctoy_mouse_x;
+   return ctoy__mouse_x;
 }
 
 float ctoy_mouse_y(void)
 {
-   return _ctoy_mouse_y;
+   return ctoy__mouse_y;
 }
 
 void ctoy_register_memory(void *memory)
 {
-   _ctoy_memory = memory;
+   ctoy__memory = memory;
 }
 
 void *ctoy_retrieve_memory(void)
 {
-   return _ctoy_memory;
+   return ctoy__memory;
 }
 
 void ctoy_sleep(long sec, long nsec)

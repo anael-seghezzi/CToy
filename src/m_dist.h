@@ -89,8 +89,7 @@ MDAPI void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src,
    Distance Transforms of Sampled Functions
    by Pedro F. Felzenszwalb and Daniel P. Huttenlocher */
 
-#define _M_DIST_T()\
-int q, k;\
+#define M_DIST_T()\
 v[0] = 0;\
 z[0] = -M_DIST_MAX;\
 z[1] = M_DIST_MAX;\
@@ -113,8 +112,9 @@ void m_dist_transform_1d(float *dest, float *src, int count)
 {
    int *v = (int *)malloc(count * sizeof(int));
    float *z = (float *)malloc((count + 1) * sizeof(float));
+   int q, k;
 
-   _M_DIST_T();
+   M_DIST_T()
 
    k = 0;
    for (q = 0; q < count; q++) {
@@ -130,8 +130,9 @@ void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count)
 {
    int *v = (int *)malloc(count * sizeof(int));
    float *z = (float *)malloc((count + 1) * sizeof(float));
+   int q, k;
 
-   _M_DIST_T();
+   M_DIST_T()
    
    k = 0;
    for (q = 0; q < count; q++) {
@@ -285,7 +286,7 @@ void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, con
 
 void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src, const struct m_image *srci)
 {
-   #define _M_VORO_FILL(T)\
+   #define M_VORO_FILL(T)\
    {\
       T *sData = (T *)src->data;\
       T *dData = (T *)dest->data;\
@@ -309,26 +310,26 @@ void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src, const
    {
    case M_BYTE:
    case M_UBYTE:
-      _M_VORO_FILL(char);
+      M_VORO_FILL(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      _M_VORO_FILL(short);
+      M_VORO_FILL(short);
       break;
    case M_INT:
    case M_UINT:
-      _M_VORO_FILL(int);
+      M_VORO_FILL(int);
       break;
    case M_FLOAT:
-      _M_VORO_FILL(float);
+      M_VORO_FILL(float);
       break;
    default:
       assert(0);
       break;
    }
    
-   #undef _M_VORO_FILL
+   #undef M_VORO_FILL
 }
 
 #endif /* M_IMAGE_VERSION */
