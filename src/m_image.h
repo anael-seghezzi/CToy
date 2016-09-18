@@ -1835,12 +1835,12 @@ MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, int r
    m_image_destroy(&tmp2);
 }
 
-#define M_WRITE_PIXEL(dest, w, h, x, y, v) {*(dest + w * y + x) = v;}
+#define M_WRITE_PIXEL(dest, x0, y0, v) {*(dest + w * (y0) + (x0)) = v;}
 #define M_PUSH_PIXEL(x2, y2) if((stack_i+3) < stack_size && m__test_pixel(data, w, h, x2, y2, ref)) {\
    stack_i+=2;\
-   stack[stack_i] = (unsigned short)x2;\
-   stack[stack_i+1] = (unsigned short)y2;\
-   M_WRITE_PIXEL(data, w, h, x2, y2, value);\
+   stack[stack_i] = (unsigned short)(x2);\
+   stack[stack_i+1] = (unsigned short)(y2);\
+   M_WRITE_PIXEL(data, x2, y2, value);\
 }
 
 static int m__test_pixel(unsigned char *src, int w, int h, int x, int y, unsigned char ref)
@@ -1864,7 +1864,7 @@ MIAPI int m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char
 
    stack[0] = (unsigned short)x;
    stack[1] = (unsigned short)y;
-   M_WRITE_PIXEL(data, w, h, x, y, value);
+   M_WRITE_PIXEL(data, x, y, value);
 
    while (stack_i >= 0) {
 
@@ -1895,7 +1895,7 @@ MIAPI int m_image_floodfill_8x(struct m_image *dest, int x, int y, unsigned char
 
    stack[0] = (unsigned short)x;
    stack[1] = (unsigned short)y;
-   M_WRITE_PIXEL(data, w, h, x, y, value);
+   M_WRITE_PIXEL(data, x, y, value);
 
    while (stack_i >= 0) {
 
