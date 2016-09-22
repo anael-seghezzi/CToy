@@ -3,7 +3,7 @@ CToy
 
 CToy is a C(99) live-coding environment based on [TCC](http://bellard.org/tcc/).
 
-Small, simple, no bullshit. Write standard cross-platform code and see the result immediately. No installation or compiler required, download (~2mb), run CToy and play. Ready for Windows 64 bit and MacOSX 64 bit (linux in progress). Ideal for games, image processing, teaching, or anything C can do.
+Small, simple, no bullshit. Write standard cross-platform code and see the result immediately. No installation or compiler required, download (~2mb), run CToy and play. Ready for Windows 64 bit and MacOSX 64 bit (linux in progress). Ideal for games, image processing, teaching, prototyping...
 
 Features
 --------
