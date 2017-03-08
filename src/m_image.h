@@ -345,6 +345,9 @@ MIAPI void m_normalize(float *dest, const float *src, int size)
       for(i = 0; i < size; i++)
          dest[i] = src[i] * sum;
    }
+   else {
+      memset(dest, 0, size * sizeof(float));
+   }
 }
 
 MIAPI void m_normalize_sum(float *dest, const float *src, int size)
@@ -357,6 +360,9 @@ MIAPI void m_normalize_sum(float *dest, const float *src, int size)
       sum = 1.0f / sum;
       for(i = 0; i < size; i++)
          dest[i] = src[i] * sum;
+   }
+   else {
+      memset(dest, 0, size * sizeof(float));
    }
 }
 
