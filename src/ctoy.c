@@ -515,10 +515,10 @@ void ctoy_swap_buffer(struct m_image *image)
 
       if (image->type == M_FLOAT) {
          m_image_float_to_srgb(&ctoy__buffer_ubyte, image);
-		 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ctoy__buffer_ubyte.width, ctoy__buffer_ubyte.height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, ctoy__buffer_ubyte.data);
+         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ctoy__buffer_ubyte.width, ctoy__buffer_ubyte.height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, ctoy__buffer_ubyte.data);
       }
       else if (image->type == M_UBYTE) {
-         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, image->comp == 3 ? GL_RGB : GL_RED, GL_UNSIGNED_BYTE, image->data);
+         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, image->data);
       }
    
       glViewport(0, 0, ctoy__win_width, ctoy__win_height);
