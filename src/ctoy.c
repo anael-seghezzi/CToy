@@ -521,6 +521,7 @@ void ctoy_swap_buffer(struct m_image *image)
          glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, image->data);
       }
    
+      glScissor(0, 0, ctoy__win_width, ctoy__win_height);
       glViewport(0, 0, ctoy__win_width, ctoy__win_height);
       ctoy__draw_texture(ctoy__texture);
    }
