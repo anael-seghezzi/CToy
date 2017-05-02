@@ -36,6 +36,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if defined(_MSC_VER) && __STDC_VERSION__ < 199901L
+#define inline __forceinline
+#endif
+
 #ifdef WIN32
 #include <windows.h>
 #include <WinBase.h>
