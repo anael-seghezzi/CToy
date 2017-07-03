@@ -25,6 +25,33 @@
     distribution.
 
 ========================================================================*/
+/*
+   Image manipulation :
+   - transformation (re-frame, mirror, rotation)
+   - conversions (float, half, ubyte, linear, greyscale...)
+   - filtering (convolution, Gaussian blur, Harris)
+   - scaling (pyramid, generic, bilinear)
+   - morphology (flood-fill, dilate, erode, thinning)
+   - edge and corner detection (Sobel, Harris)
+   
+   //////////////////////////////////////////////////////
+   Example: create a 256x256 float image with 1 component:
+ 
+   struct m_image foo1 = M_IMAGE_IDENTITY();
+   struct m_image foo2 = M_IMAGE_IDENTITY();   
+   int x, y;
+   
+   m_image_create(&foo1, M_FLOAT, 256, 256, 1);
+   memset(foo1.data, 0, foo1.size * sizeof(float)); // clear to zero
+   
+   y = 128; x = 128;
+   ((float *)foo1.data)[y * foo1.width + x] = 1.0f; // set (x, y) pixel to one
+   
+   m_image_gaussian_blur(&foo2, &foo1, 3, 3); // apply Gaussian blur
+   
+   m_image_destroy(&foo2);
+   m_image_destroy(&foo1);
+*/
 
 #ifndef M_IMAGE_H
 #define M_IMAGE_H
@@ -96,7 +123,7 @@ MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
 
 /* raw processing */
-MIAPI void  m_gaussian_kernel(float *dest, int size);
+MIAPI void  m_gaussian_kernel(float *dest, int size, float radius);
 MIAPI void  m_sst(float *dest, const float *src, int count);
 MIAPI void  m_harris_response(float *dest, const float *src, int count);
 MIAPI void  m_tfm(float *dest, const float *src, int count);
@@ -119,11 +146,11 @@ MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src);
 /* if alpha channel, src image must be pre-multiplied */
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
 MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
-MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int dx, int dy);
+MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy);
 
 /* edge and corner (float 1 component image only) */
 MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src);
-MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, int radius);
+MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius);
 
 /* morphology (ubyte 1 component image only) */
 MIAPI int  m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char ref, unsigned char value, unsigned short *stack, int stack_size);
@@ -143,7 +170,7 @@ MIAPI void m_image_non_max_supp(struct m_image *dest, const struct m_image *src,
    corners: corners coordinates of size max_count * 2
    max_count: maximum number of corners
    return corner count */
-MIAPI int m_image_corner_harris(const struct m_image *src, int margin, int radius, float threshold, int *corners, int max_count);
+MIAPI int m_image_corner_harris(const struct m_image *src, int margin, float radius, float threshold, int *corners, int max_count);
 
 /* resizing (float image only) */
 MIAPI void m_image_sub_pixel(const struct m_image *src, float x, float y, float *result);

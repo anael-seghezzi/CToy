@@ -130,7 +130,7 @@ MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
 
 /* raw processing */
-MIAPI void  m_gaussian_kernel(float *dest, int size);
+MIAPI void  m_gaussian_kernel(float *dest, int size, float radius);
 MIAPI void  m_sst(float *dest, const float *src, int count);
 MIAPI void  m_harris_response(float *dest, const float *src, int count);
 MIAPI void  m_tfm(float *dest, const float *src, int count);
@@ -153,11 +153,11 @@ MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src);
 /* if alpha channel, src image must be pre-multiplied */
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
 MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
-MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int dx, int dy);
+MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy);
 
 /* edge and corner (float 1 component image only) */
 MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src);
-MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, int radius);
+MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius);
 
 /* morphology (ubyte 1 component image only) */
 MIAPI int  m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char ref, unsigned char value, unsigned short *stack, int stack_size);
@@ -177,7 +177,7 @@ MIAPI void m_image_non_max_supp(struct m_image *dest, const struct m_image *src,
    corners: corners coordinates of size max_count * 2
    max_count: maximum number of corners
    return corner count */
-MIAPI int m_image_corner_harris(const struct m_image *src, int margin, int radius, float threshold, int *corners, int max_count);
+MIAPI int m_image_corner_harris(const struct m_image *src, int margin, float radius, float threshold, int *corners, int max_count);
 
 /* resizing (float image only) */
 MIAPI void m_image_sub_pixel(const struct m_image *src, float x, float y, float *result);
@@ -197,6 +197,7 @@ MIAPI void m_image_resize(struct m_image *dest, const struct m_image *src, int n
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
+#include <float.h>
 #include <assert.h>
 
 #ifndef M_SAFE_FREE
@@ -216,40 +217,34 @@ MIAPI void m_image_resize(struct m_image *dest, const struct m_image *src, int n
 #define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #endif
 
-MIAPI void m_gaussian_kernel(float *dest, int size)
+MIAPI void m_gaussian_kernel(float *dest, int size, float radius)
 {
-   if(size == 3) {
-      dest[0] = 0.25f;
-      dest[1] = 0.50f;
-      dest[2] = 0.25f;
+   float *k;
+   float rs, s2, sum;
+   float sigma = 1.6f;
+   float tetha = 2.25f;
+   int r, hsize = size / 2;
+   
+   s2 = 1.0f / expf(sigma * sigma * tetha);
+   rs = sigma / radius;
+
+   k = dest;
+   sum = 0.0f;
+
+   /* compute gaussian kernel */
+   for (r = -hsize; r <= hsize; r++) {
+      float x = r * rs;
+      float v = (1.0f / expf(x * x)) - s2;
+      *k = v;
+      sum += v;
+      k++;
    }
-   else {
 
-      float *k = dest;
-      float sigma = 1.6f;
-      float rs, s2;
-      float sum = 0.0f;
-      int radius = (size - 1) / 2;
-      int r;
-      
-      s2 = 1.0f / expf(sigma * sigma * 2.25f);
-      rs = sigma / (float)radius;
-
-      /* compute gaussian kernel */
-      for(r = -radius; r <= radius; r++) {
-         float x = fabsf(r * rs);
-         float v = (1.0f / expf(x * x)) - s2;
-         *k = v;
-         sum += v;
-         k++;
-      }
-
-      /* normalize */
-      if (sum > 0.0f) {
-         float isum = 1.0f / sum;
-         for (r = 0; r < size; r++)
-            dest[r] *= isum;
-      }
+   /* normalize */
+   if (sum > 0.0f) {
+      float isum = 1.0f / sum;
+      for (r = 0; r < size; r++)
+         dest[r] *= isum;
    }
 }
 
@@ -1659,17 +1654,17 @@ MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src
    m_image_destroy(&copy);
 }
 
-MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int dx, int dy)
+MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy)
 {
    struct m_image tmp = M_IMAGE_IDENTITY();
    float *kernelx = NULL, *kernely = NULL;
-   int kernelx_size = dx * 2 + 1;
-   int kernely_size = dy * 2 + 1;
+   int kernelx_size = (int)(dx + 0.5f) * 2 + 1;
+   int kernely_size = (int)(dy + 0.5f) * 2 + 1;
    
    assert(src->size > 0 && src->type == M_FLOAT);
 
    /* exit */
-   if (dx == 0 && dy == 0) {
+   if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
       m_image_copy(dest, src);
       return;
    }
@@ -1677,7 +1672,7 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* x blur */
    if (dx > 0) {
       kernelx = (float *)malloc(kernelx_size * sizeof(float));
-      m_gaussian_kernel(kernelx, kernelx_size);
+      m_gaussian_kernel(kernelx, kernelx_size, dx);
       if (dy > 0)
          m_image_convolution_h(&tmp, src, kernelx, kernelx_size);
       else
@@ -1687,7 +1682,7 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* y blur */
    if (dy > 0) {
       kernely = (float *)malloc(kernely_size * sizeof(float));
-      m_gaussian_kernel(kernely, kernely_size);
+      m_gaussian_kernel(kernely, kernely_size, dy);
       if (dx > 0)
          m_image_convolution_v(dest, &tmp, kernely, kernely_size);
       else
@@ -1817,7 +1812,7 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src)
    m_image_destroy(&copy);
 }
 
-MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, int radius)
+MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius)
 {
    struct m_image tmp1 = M_IMAGE_IDENTITY();
    struct m_image tmp2 = M_IMAGE_IDENTITY();
@@ -2176,7 +2171,7 @@ MIAPI void m_image_non_max_supp(struct m_image *dest, const struct m_image *src,
    }
 }
 
-MIAPI int m_image_corner_harris(const struct m_image *src, int margin, int radius, float threshold, int *corners, int max_count)
+MIAPI int m_image_corner_harris(const struct m_image *src, int margin, float radius, float threshold, int *corners, int max_count)
 {
    struct m_image harris = M_IMAGE_IDENTITY();
    struct m_image nms = M_IMAGE_IDENTITY();
@@ -2191,7 +2186,7 @@ MIAPI int m_image_corner_harris(const struct m_image *src, int margin, int radiu
       return 0;
 
    m_image_harris(&harris, src, radius);
-   m_image_non_max_supp(&nms, &harris, radius, threshold);
+   m_image_non_max_supp(&nms, &harris, (int)(radius) + 1, threshold);
 
    count = 0;
    pixel = (float *)nms.data;
@@ -2288,7 +2283,7 @@ MIAPI void m_image_pyrdown(struct m_image *dest, const struct m_image *src)
    int h2 = height / 2;
    int x, y, i;
 
-   m_image_gaussian_blur(&tmp, src, 1, 1);
+   m_image_gaussian_blur(&tmp, src, 1.5f, 1.5f);
    m_image_create(dest, M_FLOAT, w2, h2, comp);
 
    src_data = (float *)tmp.data;
@@ -2319,16 +2314,9 @@ MIAPI void m_image_resize(struct m_image *dest, const struct m_image *src, int n
    assert(src->size > 0 && src->type == M_FLOAT);
    m_image_create(dest, M_FLOAT, new_width, new_height, comp);
 
-   if (new_width < width || new_height < height) {
-      float r = M_MAX(rx, ry);
-      int ir = (int)r - 1;
-      if (ir > 0) {
-         m_image_gaussian_blur(&tmp, src, ir, ir);
-         m__bilinear(dest, &tmp, rx, ry, -0.5f);
-      }
-      else {
-         m__bilinear(dest, src, rx, ry, -0.5f);
-      }
+   if (rx > 1.0f || ry > 1.0f) {
+      m_image_gaussian_blur(&tmp, src, M_MAX(0.0f, rx - 1.0f), M_MAX(0.0f, ry - 1.0f));
+      m__bilinear(dest, &tmp, rx, ry, -0.5f);
    }
    else {
       m__bilinear(dest, src, rx, ry, -0.5f);
