@@ -4,9 +4,10 @@ FILE(GLOB HEADERS
   "${MTCL_INCLUDE_DIR}/*.h"
   "${STB_INCLUDE_DIR}/*.h"
 )
-FILE(GLOB SOURCES
+FILE(GLOB_RECURSE SOURCES
   ctoy_native.c
   ../3rdparty/glad/src/glad.c
+  ../../../src/*.cpp  
 )
 
 IF(CMAKE_HAS_SORT)
