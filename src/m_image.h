@@ -114,6 +114,7 @@ MIAPI void m_image_float_to_half(struct m_image *dest, const struct m_image *src
 
 MIAPI void m_image_copy(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int x, int y, int w, int h);
+MIAPI void m_image_reframe_zero(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom);
 MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom);
 MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image *src, int c);
 MIAPI void m_image_rotate_left(struct m_image *dest, const struct m_image *src);
@@ -151,6 +152,8 @@ MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src);
 
 /* convolutions (float image only) */
 /* if alpha channel, src image must be pre-multiplied */
+MIAPI void m_image_convolution_h_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size);
+MIAPI void m_image_convolution_v_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size);
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
 MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy);
@@ -1153,6 +1156,79 @@ MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image 
    #undef M_EXTRACT
 }
 
+MIAPI void m_image_reframe_zero(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom)
+{
+   #define M_REFRAME(T)\
+   {\
+      T *src_data;\
+      T *src_pixel;\
+      T *dest_pixel;\
+      int c;\
+      int x, y;\
+      m_image_create(dest, src->type, width2, height2, comp);\
+      src_data = (T *)src->data;\
+      dest_pixel = (T *)dest->data;\
+      for (y = 0; y < height2; y++) {\
+         int ys = y - top;\
+         for (x = 0; x < width2; x++) {\
+            int xs = x - left;\
+            if (ys >= 0 && ys < height && xs >= 0 && xs < width) {\
+               src_pixel = src_data + (ys * width + xs) * comp;\
+               for (c = 0; c < comp; c++)\
+                  dest_pixel[c] = src_pixel[c];\
+            }\
+            else {\
+               for (c = 0; c < comp; c++)\
+                  dest_pixel[c] = 0;\
+            }\
+            dest_pixel += comp;\
+         }\
+      }\
+   }
+
+   if(left != 0 || top != 0 || right != 0 || bottom != 0) {
+
+      int comp = src->comp;
+      int width = src->width;
+      int height = src->height;
+      int width2 = width + left + right;
+      int height2 = height + top + bottom;
+
+      if(width2 > 0 && height2 > 0) {
+
+         switch(src->type) {
+         case M_BYTE:
+         case M_UBYTE:
+            M_REFRAME(char);
+            break;
+         case M_SHORT:
+         case M_USHORT:
+         case M_HALF:
+            M_REFRAME(short);
+            break;
+         case M_INT:
+         case M_UINT:
+            M_REFRAME(int);
+            break;
+         case M_FLOAT:
+            M_REFRAME(float);
+            break;
+         default:
+            assert(0);
+            break;
+         }
+      }
+      else {
+         assert(0);
+      }
+   }
+   else {
+      m_image_copy(dest, src);
+   }
+
+   #undef M_REFRAME
+}
+
 MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom)
 {
    #define M_REFRAME(T)\
@@ -1549,33 +1625,31 @@ MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src)
    }
 }
 
-MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size)
+MIAPI void m_image_convolution_h_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size)
 {
-   struct m_image copy = M_IMAGE_IDENTITY();
    float *src_data;
    float *dest_data;
-   int width = src->width;
+   int radius = (size - 1) / 2;
+   int width = src->width - radius * 2;
    int height = src->height;
    int comp = src->comp;
-   int radius = (size - 1) / 2;
    int y, ystep, ystepc;
 
    assert(src->size > 0 && src->type == M_FLOAT);
 
-   /* create source and destination images */
-   m_image_reframe(&copy, src, radius, 0, radius, 0); /* apply clamped margin */
+   /* create destination images */
    m_image_create(dest, M_FLOAT, width, height, comp);
    
    /* clear */
    memset(dest->data, 0, dest->size * sizeof(float));
 
-   src_data = (float *)copy.data;
+   src_data = (float *)src->data;
    dest_data = (float *)dest->data;
    ystep = width * comp;
-   ystepc = copy.width * comp;
+   ystepc = src->width * comp;
 
    #pragma omp parallel for schedule(dynamic, 8)
-   for (y=0; y<height; y++) {
+   for (y = 0; y < height; y++) {
 
       float *dest_pixel = dest_data + y * ystep;
       float *src_pixel_y = src_data + y * ystepc;
@@ -1590,44 +1664,41 @@ MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src
 
          /* apply kernel */
          for (k = 0; k < size; k++) {
-         float v = kernel[k];
-         for (i = 0; i < comp; i++)
-            dest_pixel[i] += (*src_pixel++) * v;
+            float v = kernel[k];
+            for (i = 0; i < comp; i++)
+               dest_pixel[i] += (*src_pixel++) * v;
          }
 
          dest_pixel += comp;
       }
    }
-
-   m_image_destroy(&copy);
 }
 
-MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size)
+MIAPI void m_image_convolution_v_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size)
 {
-   struct m_image copy = M_IMAGE_IDENTITY();
    float *src_data;
    float *dest_data;
+   int radius = (size - 1) / 2; 
    int width = src->width;
-   int height = src->height;
+   int height = src->height - radius * 2;
    int comp = src->comp;
-   int radius = (size - 1) / 2;
+
    int y, ystep;
 
    assert(src->size > 0 && src->type == M_FLOAT);
 
-   /* create source and destination images */
-   m_image_reframe(&copy, src, 0, radius, 0, radius); /* apply clamped margin */
+   /* create destination images */
    m_image_create(dest, M_FLOAT, width, height, comp);
    
    /* clear */
    memset(dest->data, 0, dest->size * sizeof(float));
 
-   src_data = (float *)copy.data;
+   src_data = (float *)src->data;
    dest_data = (float *)dest->data;
    ystep = width * comp;
 
    #pragma omp parallel for schedule(dynamic, 8)
-   for (y=0; y<height; y++) {
+   for (y = 0; y < height; y++) {
 
       float *dest_pixel = dest_data + y * ystep;
       int x;
@@ -1650,8 +1721,86 @@ MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src
          dest_pixel += comp;
       }
    }
+}
 
-   m_image_destroy(&copy);
+MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size)
+{
+   struct m_image mask = M_IMAGE_IDENTITY();
+   struct m_image tmp = M_IMAGE_IDENTITY();
+   float *destp;
+   int radius = (size - 1) / 2;
+   int x, y, c;
+
+   assert(src->size > 0 && src->type == M_FLOAT);
+
+   /* create source and destination images */
+   m_image_reframe_zero(&tmp, src, radius, 0, radius, 0); /* apply clamped margin */
+   m_image_convolution_h_raw(dest, &tmp, kernel, size);
+
+   /* create gaussian mask */
+   m_image_create(&tmp, M_FLOAT, src->width + radius * 2, 1, 1);
+   for (x = 0; x < radius; x++)
+      ((float *)tmp.data)[x] = 0;
+   for (; x < (tmp.width - radius); x++)
+      ((float *)tmp.data)[x] = 1;
+   for (; x < tmp.width; x++)
+      ((float *)tmp.data)[x] = 0; 
+   m_image_convolution_h_raw(&mask, &tmp, kernel, size);
+
+   /* mask */
+   for (x = 0; x < mask.width; x++)
+      ((float *)mask.data)[x] = 1.0f / ((float *)mask.data)[x]; 
+
+   destp = (float *)dest->data;
+   for (y = 0; y < dest->height; y++) {
+      for (x = 0; x < dest->width; x++) {
+         for (c = 0; c < dest->comp; c++)
+            destp[c] *= ((float *)mask.data)[x];
+         destp += dest->comp;
+      }
+   }
+
+   m_image_destroy(&mask);
+   m_image_destroy(&tmp);
+}
+
+MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size)
+{
+   struct m_image tmp = M_IMAGE_IDENTITY();
+   struct m_image mask = M_IMAGE_IDENTITY();
+   float *destp;
+   int radius = (size - 1) / 2;
+   int x, y, c;
+
+   assert(src->size > 0 && src->type == M_FLOAT);
+
+   /* create source and destination images */
+   m_image_reframe_zero(&tmp, src, 0, radius, 0, radius); /* apply clamped margin */
+   m_image_convolution_v_raw(dest, &tmp, kernel, size);
+
+   /* create gaussian mask */
+   m_image_create(&tmp, M_FLOAT, 1, src->height + radius * 2, 1);
+   for (y = 0; y < radius; y++)
+      ((float *)tmp.data)[y] = 0;
+   for (; y < (tmp.height - radius); y++)
+      ((float *)tmp.data)[y] = 1;
+   for (; y < tmp.height; y++)
+      ((float *)tmp.data)[y] = 0; 
+   m_image_convolution_v_raw(&mask, &tmp, kernel, size);
+
+   /* mask */
+   destp = (float *)dest->data;
+   for (y = 0; y < dest->height; y++) {
+      float idiv = 1.0f / ((float *)mask.data)[y];
+      for (x = 0; x < dest->width; x++) {
+         for (c = 0; c < dest->comp; c++)
+            destp[c] *= idiv;
+         destp += dest->comp;
+      }
+   }
+
+   m_image_destroy(&mask);
+   m_image_destroy(&tmp);
 }
 
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy)
@@ -1665,7 +1814,7 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
 
    /* exit */
    if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
-      m_image_copy(dest, src);
+      if (dest != src) m_image_copy(dest, src);
       return;
    }
 
