@@ -32,9 +32,6 @@
 #include <float.h>
 #include "m_math.h"
 #include "m_image.h"
-#include "m_color.h"
-#include "m_dist.h"
-#include "m_raster.h"
 #include "ctoy_srgb.h"
 
 #define CTOY_CHAR_MAX 256

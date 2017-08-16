@@ -314,6 +314,8 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_image_sub_pixel", m_image_sub_pixel);
    
    tcc_add_symbol(ctoy__tcc, "m_image_summed_area", m_image_summed_area);
+   tcc_add_symbol(ctoy__tcc, "m_image_convolution_h_raw", m_image_convolution_h_raw);
+   tcc_add_symbol(ctoy__tcc, "m_image_convolution_v_raw", m_image_convolution_v_raw);   
    tcc_add_symbol(ctoy__tcc, "m_image_convolution_h", m_image_convolution_h);
    tcc_add_symbol(ctoy__tcc, "m_image_convolution_v", m_image_convolution_v);
    tcc_add_symbol(ctoy__tcc, "m_image_gaussian_blur", m_image_gaussian_blur);
@@ -352,12 +354,15 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_image_voronoi_transform", m_image_voronoi_transform);
    tcc_add_symbol(ctoy__tcc, "m_image_voronoi_fill", m_image_voronoi_fill);
    
-   tcc_add_symbol(ctoy__tcc, "m_color_sRGB_to_linear", m_color_sRGB_to_linear);
-   tcc_add_symbol(ctoy__tcc, "m_color_linear_to_sRGB", m_color_linear_to_sRGB);
-   tcc_add_symbol(ctoy__tcc, "m_color_RGB_to_HSV", m_color_RGB_to_HSV);
-   tcc_add_symbol(ctoy__tcc, "m_color_HSV_to_RGB", m_color_HSV_to_RGB);
-   tcc_add_symbol(ctoy__tcc, "m_color_RGB_to_HSL", m_color_RGB_to_HSL);
-   tcc_add_symbol(ctoy__tcc, "m_color_HSL_to_RGB", m_color_HSL_to_RGB);
+   tcc_add_symbol(ctoy__tcc, "m_sRGB_to_linear", m_sRGB_to_linear);
+   tcc_add_symbol(ctoy__tcc, "m_linear_to_sRGB", m_linear_to_sRGB);
+   tcc_add_symbol(ctoy__tcc, "m_RGB_to_HSV", m_RGB_to_HSV);
+   tcc_add_symbol(ctoy__tcc, "m_HSV_to_RGB", m_HSV_to_RGB);
+   tcc_add_symbol(ctoy__tcc, "m_RGB_to_HSL", m_RGB_to_HSL);
+   tcc_add_symbol(ctoy__tcc, "m_HSL_to_RGB", m_HSL_to_RGB);
+
+   tcc_add_symbol(ctoy__tcc, "m_pf_floodfill", m_pf_floodfill);
+   tcc_add_symbol(ctoy__tcc, "m_pf_backtrace", m_pf_backtrace);
 }
 
 void ctoy__tcc_symbols(void)

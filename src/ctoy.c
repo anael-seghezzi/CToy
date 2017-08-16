@@ -70,14 +70,14 @@
 
 #define M_MATH_IMPLEMENTATION
 #define M_IMAGE_IMPLEMENTATION
-#define M_RASTER_IMPLEMENTATION
-#define M_COLOR_IMPLEMENTATION
 #define M_DIST_IMPLEMENTATION
+#define M_RASTER_IMPLEMENTATION
+#define M_PF_IMPLEMENTATION
 #include "m_math.h"
 #include "m_image.h"
-#include "m_color.h"
 #include "m_dist.h"
 #include "m_raster.h"
+#include "m_path_finding.h"
 
 
 /* system */

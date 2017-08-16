@@ -24,6 +24,15 @@
     distribution.
 
 ========================================================================*/
+/*
+   Simple rasterization:
+   - triangle with perspective correct interpolation
+   - basic line, circle and polygon
+   
+   to create the implementation,
+   #define M_RASTER_IMPLEMENTATION
+   in *one* C/CPP file that includes this file.
+*/
 
 #ifndef M_RASTER_H
 #define M_RASTER_H

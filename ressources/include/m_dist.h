@@ -24,7 +24,17 @@
     distribution.
 
 ========================================================================*/
-
+/*
+   Fast distance transform and Voronoi:
+   
+   to create the implementation,
+   #define M_DIST_IMPLEMENTATION
+   in *one* C/CPP file that includes this file.
+   
+   optional:
+   include this file after *m_image.h* to enable m_image helpers
+*/
+   
 #ifndef M_DIST_H
 #define M_DIST_H
 

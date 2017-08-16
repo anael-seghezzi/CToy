@@ -24,6 +24,22 @@
     distribution.
 
 ========================================================================*/
+/*
+   Math with C/OpenCL portability:
+   - vector manipulation
+   - interpolation (cubic, catmullrom)
+   - quaternion basics
+   - matrix (projection, transformation...)
+   - random number generator
+   - 2d routines
+   - 3d routines:
+      - voxeliser (tri-box overlap)
+      - raytracing (sphere, plane, box, triangle)
+   
+   to create the implementation,
+   #define M_MATH_IMPLEMENTATION
+   in *one* C/CPP file that includes this file.
+*/
 
 #ifndef M_MATH_H
 #define M_MATH_H

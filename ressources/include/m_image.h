@@ -131,6 +131,12 @@ MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
 
 /* raw processing */
+MIAPI void  m_sRGB_to_linear(float *dest, const float *src, int size);
+MIAPI void  m_linear_to_sRGB(float *dest, const float *src, int size);
+MIAPI void  m_RGB_to_HSV(float *dest, const float *src);
+MIAPI void  m_HSV_to_RGB(float *dest, const float *src);
+MIAPI void  m_RGB_to_HSL(float *dest, const float *src);
+MIAPI void  m_HSL_to_RGB(float *dest, const float *src);
 MIAPI void  m_gaussian_kernel(float *dest, int size, float radius);
 MIAPI void  m_sst(float *dest, const float *src, int count);
 MIAPI void  m_harris_response(float *dest, const float *src, int count);
