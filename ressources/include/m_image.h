@@ -33,6 +33,13 @@
    - scaling (pyramid, generic, bilinear)
    - morphology (flood-fill, dilate, erode, thinning)
    - edge and corner detection (Sobel, Harris)
+
+   to create the implementation,
+   #define M_IMAGE_IMPLEMENTATION
+   in *one* C/CPP file that includes this file.
+
+   optional:
+   include after *m_math.h*
    
    //////////////////////////////////////////////////////
    Example: create a 256x256 float image with 1 component:
@@ -107,6 +114,7 @@ MIAPI void m_image_float_to_half(struct m_image *dest, const struct m_image *src
 
 MIAPI void m_image_copy(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int x, int y, int w, int h);
+MIAPI void m_image_reframe_zero(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom);
 MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom);
 MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image *src, int c);
 MIAPI void m_image_rotate_left(struct m_image *dest, const struct m_image *src);
@@ -144,6 +152,8 @@ MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src);
 
 /* convolutions (float image only) */
 /* if alpha channel, src image must be pre-multiplied */
+MIAPI void m_image_convolution_h_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size);
+MIAPI void m_image_convolution_v_raw(struct m_image *dest, const struct m_image *src, float *kernel, int size);
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
 MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy);
@@ -153,11 +163,11 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius);
 
 /* morphology (ubyte 1 component image only) */
-MIAPI int  m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char ref, unsigned char value, unsigned short *stack, int stack_size);
-MIAPI int  m_image_floodfill_8x(struct m_image *dest, int x, int y, unsigned char ref, unsigned char value, unsigned short *stack, int stack_size);
+MIAPI int  m_image_floodfill_4x(struct m_image *dest, int x, int y, uint8_t ref, uint8_t value, uint16_t *stack, int stack_size);
+MIAPI int  m_image_floodfill_8x(struct m_image *dest, int x, int y, uint8_t ref, uint8_t value, uint16_t *stack, int stack_size);
 MIAPI void m_image_dilate(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_erode(struct m_image *dest, const struct m_image *src);
-MIAPI void m_image_edge_4x(struct m_image *dest, const struct m_image *src, unsigned char ref);
+MIAPI void m_image_edge_4x(struct m_image *dest, const struct m_image *src, uint8_t ref);
 MIAPI void m_image_thin(struct m_image *dest);
 
 /* non maxima suppression (float image only) */
