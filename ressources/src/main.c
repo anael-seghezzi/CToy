@@ -14,4 +14,7 @@
 
 #elif CTOY_SAMPLE == 4
 #include "sample/libtcc_hello.c"
+
+#elif CTOY_SAMPLE == 5
+#include "sample/raytracing.c"
 #endif
