@@ -1,5 +1,5 @@
 /*======================================================================
- CToy Raytracing sample
+ CToy Raytracing sample (CPU)
 ------------------------------------------------------------------------
  Copyright (c) 2015-2017 Anael Seghezzi <www.maratis3d.com>
 

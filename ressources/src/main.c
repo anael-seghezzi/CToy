@@ -17,4 +17,7 @@
 
 #elif CTOY_SAMPLE == 5
 #include "sample/raytracing.c"
+
+#elif CTOY_SAMPLE == 6
+#include "sample/voronoi.c"
 #endif
