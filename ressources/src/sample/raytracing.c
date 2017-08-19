@@ -24,34 +24,13 @@
 
 ========================================================================*/
 
-#define USE_NOISE /* comment to disable 3d noise (simple sphere raytracing) */
+#define USE_3D_NOISE /* raymarch 3d noise */
+
+#define STB_PERLIN_IMPLEMENTATION
+#include "../util/stb_perlin.h"
 
 static struct m_image test_buffer = M_IMAGE_IDENTITY();
 
-/* approximative noise */
-static struct m_image rand_image = M_IMAGE_IDENTITY();
-static struct m_image tmp = M_IMAGE_IDENTITY();
-
-void init_noise(void)
-{
-	int i;
-	m_image_create(&rand_image, M_FLOAT, 16, 16, 2);
-	for (i = 0; i < rand_image.size; i++)
-		((float *)rand_image.data)[i] = m_randf();
-}
-
-void destroy_noise(void)
-{
-	m_image_destroy(&rand_image);
-}
-
-float fast_noise(float x, float y, float z)
-{
-	float values[2];
-	float i = z - floorf(z);
-	m_image_sub_pixel(&rand_image, x + z + 8, y + z + 8, values);
-	return values[0] * (1.0f - i) + values[1] * i;
-}
 
 #define GET_RAY(ray, px, py, pz, hw, hh, ratio)\
 {\
@@ -73,7 +52,7 @@ static void draw(void)
 	float3 sphere_pos;
 	float3 light_dir;
 	float z_near = 1e-4;
-	float ambient = 0.15f;
+	float ambient = 0.05f;
 	float sphere_radius2;
 	float sphere_tex_unit;
 	float hw = w * 0.5f;
@@ -87,9 +66,9 @@ static void draw(void)
 	
 	/* sphere */
 	sphere_radius2 = 150;
-	sphere_pos.x = cosf(test_t * 0.025f) * 20.0f;
+	sphere_pos.x = cosf(test_t * 0.04f) * 10.0f;
 	sphere_pos.y = 0.0f;
-	sphere_pos.z = 50.0f + (sinf(test_t * 0.025f) + 1.0f) * 70.0f;
+	sphere_pos.z = 30.0f + (sinf(test_t * 0.04f) + 1.0f) * 4.0f;
 	sphere_tex_unit = 0.25f;
 
 	/* clear */
@@ -106,13 +85,12 @@ static void draw(void)
 			
 			float3 origin = {0, 0, 0};
 			float3 ray, march_dir;
-			float march_step;
+			float march_step = 0.25f;
 			float idist, dist = 0, Z = 1e20;
 			
 			/* get ray from pixel position */
 			GET_RAY(ray, x, y, 1.35f, hw, hh, ratio);
 
-			march_step = 0.25f;
 			march_dir.x = ray.x * march_step;
 			march_dir.y = ray.y * march_step;
 			march_dir.z = ray.z * march_step;
@@ -127,7 +105,7 @@ static void draw(void)
 					float3 pos = {origin.x + rd.x, origin.y + rd.y, origin.z + rd.z};
 					
 					/* simple sphere */
-					#ifndef USE_NOISE
+					#ifndef USE_3D_NOISE
 					{
 						float3 normal;
 						float diffuse;
@@ -139,14 +117,28 @@ static void draw(void)
 						pixel[1] = ambient + diffuse;
 						pixel[2] = ambient + diffuse;
 						Z = dist;
+
+						// noise as texture
+						{
+							float3 vcoord = {
+								(pos.x - sphere_pos.x) * sphere_tex_unit,
+								(pos.y - sphere_pos.y) * sphere_tex_unit,
+								(pos.z - sphere_pos.z) * sphere_tex_unit
+							};
+							float perlin = stb_perlin_noise3(vcoord.x, vcoord.y, vcoord.z, 0, 0, 0) * 0.5f + 0.5f;
+
+							pixel[0] *= perlin > 0.6;
+							pixel[1] *= perlin > 0.5;
+							pixel[2] *= perlin > 0.3;
+						}
 					}
 					/* volumetric ray marching inside a sphere (perlin noise test) */
 					#else
 					{
 						float3 march = pos; /* starting at sphere intersection */
-						int i;
+						int i = 0;
 
-						for (i = 0; i < 256; i++) {
+						for (i = 0; i < 32; i++) {
 
 							float3 vcoord = {
 								(march.x - sphere_pos.x) * sphere_tex_unit,
@@ -154,8 +146,8 @@ static void draw(void)
 								(march.z - sphere_pos.z) * sphere_tex_unit
 							};
 	
-							float perlin = fast_noise(vcoord.x, vcoord.y, vcoord.z);
-							if (perlin > 0.6f) {
+							float perlin = stb_perlin_noise3(vcoord.x, vcoord.y, vcoord.z, 0, 0, 0);
+							if (perlin > -0.2f) {
 
 								/* render */
 								float3 normal;
@@ -167,9 +159,9 @@ static void draw(void)
 									M_NORMALIZE3(normal, normal);
 								} else {
 									/* volume normal */
-									normal.x = perlin - fast_noise(vcoord.x + 0.0001f, vcoord.y, vcoord.z);
-									normal.y = perlin - fast_noise(vcoord.x, vcoord.y + 0.0001f, vcoord.z);
-									normal.z = perlin - fast_noise(vcoord.x, vcoord.y, vcoord.z + 0.0001f);
+									normal.x = perlin - stb_perlin_noise3(vcoord.x + 0.0001f, vcoord.y, vcoord.z, 0, 0, 0);
+									normal.y = perlin - stb_perlin_noise3(vcoord.x, vcoord.y + 0.0001f, vcoord.z, 0, 0, 0);
+									normal.z = perlin - stb_perlin_noise3(vcoord.x, vcoord.y, vcoord.z + 0.0001f, 0, 0, 0);
 									M_NORMALIZE3(normal, normal);
 								}
 
@@ -206,13 +198,11 @@ void ctoy_begin(void)
    ctoy_window_size(512, 512);
 
    m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
-   init_noise();
 }
 
 void ctoy_end(void)
 {
    m_image_destroy(&test_buffer);
-   destroy_noise();
 }
 
 void ctoy_main_loop(void)
