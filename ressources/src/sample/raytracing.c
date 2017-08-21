@@ -159,9 +159,10 @@ static void draw(void)
 									M_NORMALIZE3(normal, normal);
 								} else {
 									/* volume normal */
-									normal.x = perlin - stb_perlin_noise3(vcoord.x + 0.0001f, vcoord.y, vcoord.z, 0, 0, 0);
-									normal.y = perlin - stb_perlin_noise3(vcoord.x, vcoord.y + 0.0001f, vcoord.z, 0, 0, 0);
-									normal.z = perlin - stb_perlin_noise3(vcoord.x, vcoord.y, vcoord.z + 0.0001f, 0, 0, 0);
+									float3 vco = {vcoord.x + 0.001f, vcoord.y + 0.001f, vcoord.z + 0.001f};
+									normal.x = perlin - stb_perlin_noise3(vco.x, vcoord.y, vcoord.z, 0, 0, 0);
+									normal.y = perlin - stb_perlin_noise3(vcoord.x, vco.y, vcoord.z, 0, 0, 0);
+									normal.z = perlin - stb_perlin_noise3(vcoord.x, vcoord.y, vco.z, 0, 0, 0);
 									M_NORMALIZE3(normal, normal);
 								}
 
