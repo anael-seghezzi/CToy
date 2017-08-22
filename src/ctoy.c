@@ -78,7 +78,11 @@
 #include "m_dist.h"
 #include "m_raster.h"
 #include "m_path_finding.h"
-
+#undef M_MATH_IMPLEMENTATION
+#undef M_IMAGE_IMPLEMENTATION
+#undef M_DIST_IMPLEMENTATION
+#undef M_RASTER_IMPLEMENTATION
+#undef M_PF_IMPLEMENTATION
 
 /* system */
 char           ctoy__title[256];
