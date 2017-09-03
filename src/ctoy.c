@@ -269,7 +269,8 @@ static int ctoy__window_init(const char *title, int fullscreen)
    glfwSetCharCallback(ctoy__window, ctoy__char_callback);
    glfwSetCursorPosCallback(ctoy__window, ctoy__cursorpos_callback);
    glfwMakeContextCurrent(ctoy__window);
-   
+   glfwSwapInterval(1);
+
 #ifndef GLFW_INCLUDE_ES2
    if (gladLoadGL() == 0)
       return 0;
