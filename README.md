@@ -1,7 +1,7 @@
-CToy
+C-Toy
 ====
 
-CToy is an interactive C(99) coding environment based on [TCC](http://bellard.org/tcc/).
+C-Toy is an interactive C(99) coding environment based on [TCC](http://bellard.org/tcc/).
 
 Small, simple, no bullshit. Write cross-platform C code and see the result immediately. No installation or compiler required, download (~2mb), unzip, run CToy and play. Ready for Windows 64 bit and MacOSX 64 bit (linux in progress). Ideal for games, image processing, teaching, prototyping...
 
