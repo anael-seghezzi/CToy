@@ -39,7 +39,7 @@
 #include <libtcc.h>
 
 /* custom calls */
-void (*ctoy_begin)(void);
+void (*ctoy_begin)(int, char **);
 void (*ctoy_main_loop)(void);
 void (*ctoy_end)(void);
 
@@ -48,6 +48,8 @@ static char ctoy__dir[256];
 TCCState *  ctoy__tcc;
 int         ctoy__src_update = 0;
 int         ctoy__src_state = 0;
+char      **ctoy__argv_store;
+int         ctoy__argc = 0;
 
 #ifndef CTOY_PLAYER
 /* dynamic refresh */
@@ -476,7 +478,7 @@ int ctoy__tcc_init(void)
       return 0;
 
     /* get entry symbol */
-   ctoy_begin = (void (*)(void))tcc_get_symbol(ctoy__tcc, "ctoy_begin");
+   ctoy_begin = (void (*)(int, char **))tcc_get_symbol(ctoy__tcc, "ctoy_begin");
    ctoy_main_loop = (void (*)(void))tcc_get_symbol(ctoy__tcc, "ctoy_main_loop");
    ctoy_end = (void (*)(void))tcc_get_symbol(ctoy__tcc, "ctoy_end");
    if (!ctoy_begin || !ctoy_main_loop || !ctoy_end)
@@ -496,7 +498,7 @@ void ctoy__main_loop(void)
       tcc_delete(ctoy__tcc);
       ctoy__src_state = ctoy__tcc_init();
       if (ctoy__src_state)
-         ctoy_begin();
+         ctoy_begin(ctoy__argc, ctoy__argv_store);
 #ifndef CTOY_PLAYER
       ctoy__src_thread_restart();
 #endif
@@ -505,6 +507,25 @@ void ctoy__main_loop(void)
 
 int main(int argc, char **argv)
 {
+   int i, sz;
+
+   /* store the arguments, because ctoy_begin() is called in the main loop */
+   ctoy__argc = argc;
+   ctoy__argv_store = calloc(argc, sizeof argv);
+   if (!ctoy__argv_store) {
+      printf("ERROR CTOY: Unable to allocate memory for argv store\n");
+      return EXIT_FAILURE;
+   }
+   for (i = 0; i < argc; ++i) {
+      sz = strlen(argv[i]);
+      ctoy__argv_store[i] = calloc(sz + 1, 1);
+      if (!ctoy__argv_store[i]) {
+          printf("ERROR CTOY: Unable to allocate memory for argv store string %d\n", i);
+          return EXIT_FAILURE;
+      }
+      strncpy(ctoy__argv_store[i], argv[i], sz);
+   }
+
    ctoy__get_directory(ctoy__dir, argv[0]);
    ctoy__set_working_dir(ctoy__dir);
 
@@ -526,7 +547,7 @@ int main(int argc, char **argv)
 
    /* run */
    if (ctoy__src_state)
-      ctoy_begin();
+      ctoy_begin(ctoy__argc, ctoy__argv_store);
 
    while (ctoy__state) {
       ctoy__main_loop();

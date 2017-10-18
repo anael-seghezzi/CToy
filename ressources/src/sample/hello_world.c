@@ -78,7 +78,7 @@ void image_draw(void)
    }   
 }
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
    printf("Hello World!\n");
    ctoy_window_title("Hello World!");

@@ -9,7 +9,7 @@ const char *script =
 " return x + y;"
 "}";
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
    TCCState *s;
 
