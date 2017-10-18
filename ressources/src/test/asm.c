@@ -1,6 +1,6 @@
 #include <sys/stat.h>
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
 	float4 v1, v2, v3;
 

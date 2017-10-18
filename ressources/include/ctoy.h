@@ -42,7 +42,7 @@
 #define CTOY_CHAR_MAX 256
 
 /* custom calls */
-void ctoy_begin(void);
+void ctoy_begin(int argc, char **argv);
 void ctoy_main_loop(void);
 void ctoy_end(void);
 

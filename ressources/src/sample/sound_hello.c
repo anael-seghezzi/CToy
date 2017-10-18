@@ -123,7 +123,7 @@ void synthesize(void)
    m_image_destroy(&sound);
 }
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
    printf("<sample sound_hello>\n");
    sound_begin();

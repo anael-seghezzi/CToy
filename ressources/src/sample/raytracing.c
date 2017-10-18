@@ -192,7 +192,7 @@ static void draw(void)
 	}
 }
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
    printf("Raytracing\n");
    ctoy_window_title("Raytracing");

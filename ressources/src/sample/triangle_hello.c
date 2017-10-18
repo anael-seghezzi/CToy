@@ -37,7 +37,7 @@ void draw(void)
    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {
    const char * version = (const char *)glGetString(GL_VERSION);
 

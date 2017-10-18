@@ -134,7 +134,7 @@ void ctoy_main_loop(void)
 	ctoy_swap_buffer(&test_buffer);
 }
 
-void ctoy_begin(void)
+void ctoy_begin(int argc, char **argv)
 {	
 	m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
 	init();

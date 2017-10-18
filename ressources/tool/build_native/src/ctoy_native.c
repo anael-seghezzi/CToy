@@ -54,7 +54,7 @@ int main(int argc, char **argv)
    }
 
    /* run */
-   ctoy_begin();
+   ctoy_begin(argc, argv);
 
 #ifdef __EMSCRIPTEN__
    emscripten_set_main_loop(ctoy__main_loop, 0, 1);
