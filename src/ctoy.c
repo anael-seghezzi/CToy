@@ -96,7 +96,7 @@ int            ctoy__win_width = 0;
 int            ctoy__win_height = 0;
 int            ctoy__tex_width = 0;
 int            ctoy__tex_height = 0;
-char           **ctoy__argv_store;
+char           **ctoy__argv;
 int            ctoy__argc = 0;
 
 
@@ -629,5 +629,5 @@ int ctoy_argc(void)
 
 char **ctoy_argv(void)
 {
-    return ctoy__argv_store;
+    return ctoy__argv;
 }

@@ -508,20 +508,7 @@ int main(int argc, char **argv)
    int i, sz;
 
    ctoy__argc = argc;
-   ctoy__argv_store = calloc(argc, sizeof argv);
-   if (!ctoy__argv_store) {
-      printf("ERROR CTOY: Unable to allocate memory for argv store\n");
-      return EXIT_FAILURE;
-   }
-   for (i = 0; i < argc; ++i) {
-      sz = strlen(argv[i]);
-      ctoy__argv_store[i] = calloc(sz + 1, 1);
-      if (!ctoy__argv_store[i]) {
-          printf("ERROR CTOY: Unable to allocate memory for argv store string %d\n", i);
-          return EXIT_FAILURE;
-      }
-      strncpy(ctoy__argv_store[i], argv[i], sz);
-   }
+   ctoy__argv = argv;
 
    ctoy__get_directory(ctoy__dir, argv[0]);
    ctoy__set_working_dir(ctoy__dir);

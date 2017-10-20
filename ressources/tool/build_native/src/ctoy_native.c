@@ -37,6 +37,9 @@ static void ctoy__main_loop(void)
 
 int main(int argc, char **argv)
 {
+    ctoy__argc = argc;
+    ctoy__argv = argv;
+
 #ifndef __EMSCRIPTEN__
    char dir[256];
    ctoy__get_directory(dir, argv[0]);
