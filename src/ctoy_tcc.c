@@ -505,6 +505,11 @@ void ctoy__main_loop(void)
 
 int main(int argc, char **argv)
 {
+   int i, sz;
+
+   ctoy__argc = argc;
+   ctoy__argv = argv;
+
    ctoy__get_directory(ctoy__dir, argv[0]);
    ctoy__set_working_dir(ctoy__dir);
 
