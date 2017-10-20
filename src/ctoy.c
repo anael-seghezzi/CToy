@@ -96,6 +96,9 @@ int            ctoy__win_width = 0;
 int            ctoy__win_height = 0;
 int            ctoy__tex_width = 0;
 int            ctoy__tex_height = 0;
+char           **ctoy__argv_store;
+int            ctoy__argc = 0;
+
 
 /* input */
 #define        CTOY_MOUSE_BUTTON_COUNT (GLFW_MOUSE_BUTTON_LAST+1)
@@ -617,4 +620,14 @@ void ctoy_sleep(long sec, long nsec)
 #else
    thrd_sleep(&t, NULL);
 #endif
+}
+
+int ctoy_argc(void)
+{
+    return ctoy__argc;
+}
+
+char **ctoy_argv(void)
+{
+    return ctoy__argv_store;
 }

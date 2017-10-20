@@ -44,6 +44,8 @@ float ctoy_mouse_x(void);
 float ctoy_mouse_y(void);
 double ctoy_get_time(void);
 void ctoy_sleep(long sec, long nsec);
+int ctoy_argc(void);
+char **ctoy_argv(void);
 
 void ctoy_window_size(int width, int height);
 void ctoy_window_title(const char *title);
