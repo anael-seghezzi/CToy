@@ -66,6 +66,7 @@
 #include <tinycthread.h>
 #endif
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #define M_MATH_IMPLEMENTATION
