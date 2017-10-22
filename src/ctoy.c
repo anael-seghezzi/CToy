@@ -64,6 +64,7 @@
 #else
 #include <glad/glad.h>
 #include <tinycthread.h>
+#define GLFW_INCLUDE_NONE
 #endif
 
 #include <GLFW/glfw3.h>

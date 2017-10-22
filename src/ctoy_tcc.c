@@ -440,6 +440,7 @@ int ctoy__tcc_init(void)
 #ifndef CTOY_PLAYER
    ctoy__io_replace();
 #endif
+   tcc_set_lib_path(ctoy__tcc, ".");
 
    /* search path */
    tcc_add_library_path(ctoy__tcc, ctoy__dir);
