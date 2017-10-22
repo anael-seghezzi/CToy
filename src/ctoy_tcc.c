@@ -232,6 +232,9 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_window_title", ctoy_window_title);
    tcc_add_symbol(ctoy__tcc, "ctoy_register_memory", ctoy_register_memory);
    tcc_add_symbol(ctoy__tcc, "ctoy_retrieve_memory", ctoy_retrieve_memory);
+
+   tcc_add_symbol(ctoy__tcc, "ctoy_argc", ctoy_argc);
+   tcc_add_symbol(ctoy__tcc, "ctoy_argv", ctoy_argv);
 }
 
 void ctoy__maratis_symbols(void)
@@ -440,9 +443,9 @@ int ctoy__tcc_init(void)
 #ifndef CTOY_PLAYER
    ctoy__io_replace();
 #endif
-   tcc_set_lib_path(ctoy__tcc, ".");
 
    /* search path */
+   tcc_set_lib_path(ctoy__tcc, ".");
    tcc_add_library_path(ctoy__tcc, ctoy__dir);
 
    sprintf(path, "%s/include", ctoy__dir);
