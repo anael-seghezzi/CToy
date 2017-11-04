@@ -93,6 +93,10 @@ void *         ctoy__memory = NULL;
 GLFWwindow *   ctoy__window = NULL;
 GLuint         ctoy__texture;
 int            ctoy__state = 1;
+int            ctoy__prev_win_x = 0;
+int            ctoy__prev_win_y = 0;
+int            ctoy__prev_win_width = 0;
+int            ctoy__prev_win_height = 0;
 int            ctoy__win_width = 0;
 int            ctoy__win_height = 0;
 int            ctoy__tex_width = 0;
@@ -233,24 +237,28 @@ static void ctoy__setup_texture(int width, int height)
   ctoy__tex_height = height;
 }
 
+static GLFWmonitor *ctoy__monitor_init(void)
+{
+   GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+   const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+   
+   glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+   glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+   glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+   glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+   
+   ctoy__win_width = mode->width;
+   ctoy__win_height = mode->height;
+   return monitor;
+}
+
 static int ctoy__window_init(const char *title, int fullscreen)
 {
    GLFWmonitor *monitor = NULL;
    GLFWwindow *win;
 
-   if (fullscreen) {
-      const GLFWvidmode *mode;
-      monitor = glfwGetPrimaryMonitor();
-      mode = glfwGetVideoMode(monitor);
-      
-      glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-      glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-      glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-      glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-      
-      ctoy__win_width = mode->width;
-      ctoy__win_height = mode->height;
-   }
+   if (fullscreen)
+      monitor = ctoy__monitor_init();
    
 #ifdef GLFW_INCLUDE_ES2
    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -562,7 +570,26 @@ void ctoy_window_size(int width, int height)
 
 void ctoy_window_fullscreen(int fullscreen)
 {
-   ctoy__window_init(ctoy__title, fullscreen);
+	GLFWmonitor *monitor = NULL;
+	int x = 0, y = 0;
+
+   if (fullscreen) {
+   	ctoy__prev_win_width = ctoy__win_width;
+		ctoy__prev_win_height = ctoy__win_height;
+		glfwGetWindowPos(ctoy__window, &ctoy__prev_win_x, &ctoy__prev_win_y);
+      monitor = ctoy__monitor_init();
+   }
+   else {
+   	ctoy__win_width = ctoy__prev_win_width;
+   	ctoy__win_height = ctoy__prev_win_height;
+   	x = ctoy__prev_win_x;
+   	y = ctoy__prev_win_y;
+   }
+
+   glfwSetWindowMonitor(
+   	ctoy__window, monitor,
+   	x, y, ctoy__win_width, ctoy__win_height, GLFW_DONT_CARE
+   	);
 }
 
 unsigned long ctoy_t(void)
