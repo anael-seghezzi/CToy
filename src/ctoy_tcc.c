@@ -510,11 +510,19 @@ void ctoy__main_loop(void)
 int main(int argc, char **argv)
 {
    int i, sz;
-
+   
    ctoy__argc = argc;
    ctoy__argv = argv;
 
+#ifdef __linux__
+   {
+   	char tmp[256];
+      readlink( "/proc/self/exe", tmp, 256);
+      ctoy__get_directory(ctoy__dir, tmp);
+   }
+#else
    ctoy__get_directory(ctoy__dir, argv[0]);
+#endif
    ctoy__set_working_dir(ctoy__dir);
 
    /* openal */
