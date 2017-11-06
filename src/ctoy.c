@@ -570,26 +570,27 @@ void ctoy_window_size(int width, int height)
 
 void ctoy_window_fullscreen(int fullscreen)
 {
-	GLFWmonitor *monitor = NULL;
-	int x = 0, y = 0;
+   GLFWmonitor *monitor = NULL;
+   int x = 0, y = 0;
 
    if (fullscreen) {
-   	ctoy__prev_win_width = ctoy__win_width;
-		ctoy__prev_win_height = ctoy__win_height;
-		glfwGetWindowPos(ctoy__window, &ctoy__prev_win_x, &ctoy__prev_win_y);
+      ctoy__prev_win_width = ctoy__win_width;
+      ctoy__prev_win_height = ctoy__win_height;
+      glfwGetWindowPos(ctoy__window, &ctoy__prev_win_x, &ctoy__prev_win_y);
       monitor = ctoy__monitor_init();
    }
    else {
-   	ctoy__win_width = ctoy__prev_win_width;
-   	ctoy__win_height = ctoy__prev_win_height;
-   	x = ctoy__prev_win_x;
-   	y = ctoy__prev_win_y;
+      ctoy__win_width = ctoy__prev_win_width;
+      ctoy__win_height = ctoy__prev_win_height;
+      x = ctoy__prev_win_x;
+      y = ctoy__prev_win_y;
    }
 
    glfwSetWindowMonitor(
-   	ctoy__window, monitor,
-   	x, y, ctoy__win_width, ctoy__win_height, GLFW_DONT_CARE
-   	);
+      ctoy__window, monitor,
+      x, y, ctoy__win_width, ctoy__win_height, GLFW_DONT_CARE
+      );
+   glfwSwapInterval(1);
 }
 
 unsigned long ctoy_t(void)
