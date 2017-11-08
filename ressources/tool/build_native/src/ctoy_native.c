@@ -41,17 +41,19 @@ int main(int argc, char **argv)
     ctoy__argv = argv;
 
 #ifndef __EMSCRIPTEN__
-   char dir[256];
-#ifdef __linux__
    {
-      char tmp[256];
-      readlink( "/proc/self/exe", tmp, 256);
-      ctoy__get_directory(dir, tmp);
-   }
+      char dir[256];
+#ifdef __linux__
+      {
+         char tmp[256];
+         readlink( "/proc/self/exe", tmp, 256);
+         ctoy__get_directory(dir, tmp);
+      }
 #else
-   ctoy__get_directory(dir, argv[0]);
+      ctoy__get_directory(dir, argv[0]);
 #endif
-   ctoy__set_working_dir(dir);
+      ctoy__set_working_dir(dir);
+   }
 #endif
 
    /* openal */
