@@ -100,6 +100,9 @@ struct m_image
 /* identity, must be used before calling m_image_create */
 #define M_IMAGE_IDENTITY() {0, 0, 0, 0, 0, 0}
 
+/* m_image type util */
+MIAPI int m_type_sizeof(char type);
+
 /* fully supported types are: M_UBYTE, M_USHORT, M_HALF, M_FLOAT
    partially supported types: M_BYTE, M_SHORT, M_INT, M_UINT (no support for conversion) */
 MIAPI void m_image_create(struct m_image *image, char type, int width, int height, int comp);
@@ -125,6 +128,8 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src);
 
 MIAPI void m_image_premultiply(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src);
+MIAPI void m_image_sRGB_to_linear(struct m_image *dest, const struct m_image *src);
+MIAPI void m_image_linear_to_sRGB(struct m_image *dest, const struct m_image *src);
 
 /* float/half conversion */
 MIAPI float    m_half2float(uint16_t h);

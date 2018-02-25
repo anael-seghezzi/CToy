@@ -419,6 +419,7 @@ void ctoy__add_libs(void)
             tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
 #else
             dlopen(filename, RTLD_LAZY);
+            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
 #endif
          }
       }
