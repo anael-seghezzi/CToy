@@ -454,6 +454,7 @@ MIAPI void m_gaussian_kernel(float *dest, int size, float radius)
    for (r = -hsize; r <= hsize; r++) {
       float x = r * rs;
       float v = (1.0f / expf(x * x)) - s2;
+      v = M_MAX(v, 0);
       *k = v;
       sum += v;
       k++;
@@ -2092,8 +2093,8 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
 {
    struct m_image tmp = M_IMAGE_IDENTITY();
    float *kernelx = NULL, *kernely = NULL;
-   int kernelx_size = (int)(dx + 0.5f) * 2 + 1;
-   int kernely_size = (int)(dy + 0.5f) * 2 + 1;
+   int kernelx_size = (int)(dx / 0.65f + 0.5f) * 2 + 1;
+   int kernely_size = (int)(dy / 0.65f + 0.5f) * 2 + 1;
    
    assert(src->size > 0 && src->type == M_FLOAT);
 
