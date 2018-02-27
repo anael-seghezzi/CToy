@@ -312,8 +312,12 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_image_rotate_180", m_image_rotate_180);
    tcc_add_symbol(ctoy__tcc, "m_image_mirror_x", m_image_mirror_x);
    tcc_add_symbol(ctoy__tcc, "m_image_mirror_y", m_image_mirror_y);
+   
    tcc_add_symbol(ctoy__tcc, "m_image_premultiply", m_image_premultiply);
    tcc_add_symbol(ctoy__tcc, "m_image_unpremultiply", m_image_unpremultiply);
+   tcc_add_symbol(ctoy__tcc, "m_image_sRGB_to_linear", m_image_sRGB_to_linear);
+   tcc_add_symbol(ctoy__tcc, "m_image_linear_to_sRGB", m_image_linear_to_sRGB);
+
    tcc_add_symbol(ctoy__tcc, "m_image_sub_pixel", m_image_sub_pixel);
    
    tcc_add_symbol(ctoy__tcc, "m_image_summed_area", m_image_summed_area);
