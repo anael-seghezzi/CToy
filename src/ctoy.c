@@ -69,6 +69,13 @@
 
 #include <GLFW/glfw3.h>
 
+#ifdef __linux__
+#define GLFW_EXPOSE_NATIVE_X11
+#include <GLFW/glfw3native.h>
+#define EASYTAB_IMPLEMENTATION
+#include "easytab.h"
+#endif
+
 #define M_MATH_IMPLEMENTATION
 #define M_IMAGE_IMPLEMENTATION
 #define M_DIST_IMPLEMENTATION
@@ -121,6 +128,7 @@ unsigned int   ctoy__char_queue[CTOY_CHAR_MAX];
 int            ctoy__char_count = 0;
 float          ctoy__mouse_x = 0;
 float          ctoy__mouse_y = 0;
+float          ctoy__tablet_pressure = 0;
 
 /* sound */
 ALCdevice *    ctoy__oal_device = NULL;
@@ -283,6 +291,14 @@ static int ctoy__window_init(const char *title, int fullscreen)
    glfwMakeContextCurrent(ctoy__window);
    glfwSwapInterval(1);
 
+#ifdef __linux__
+   {
+      Window xwindow = glfwGetX11Window(ctoy__window);
+      Display *xdisplay = glfwGetX11Display();
+      EasyTab_Load(xdisplay, xwindow);
+   }
+#endif
+
 #ifndef GLFW_INCLUDE_ES2
    if (gladLoadGL() == 0)
       return 0;
@@ -414,6 +430,24 @@ static void ctoy__update(void)
    for (i = 0; i < CTOY_MOUSE_BUTTON_COUNT; i++)
       ctoy__mouse_button[i][0] = 0; 
    ctoy__char_count = 0;
+
+   /* tablet events */
+#ifdef __linux__
+   {
+      Display *xdisplay = glfwGetX11Display();
+      int count = XPending(xdisplay);
+      while (count--)
+      {
+         XEvent event;
+         XPeekEvent(xdisplay, &event);
+         if (EasyTab_HandleEvent(&event) == EASYTAB_OK)
+         {
+         	ctoy__tablet_pressure = EasyTab->Pressure;
+         }
+      }
+   }
+#endif
+
    glfwPollEvents();
 
    ctoy__t++;
@@ -626,6 +660,11 @@ float ctoy_mouse_x(void)
 float ctoy_mouse_y(void)
 {
    return ctoy__mouse_y;
+}
+
+float ctoy_tablet_pressure(void)
+{
+   return ctoy__tablet_pressure;
 }
 
 void ctoy_register_memory(void *memory)

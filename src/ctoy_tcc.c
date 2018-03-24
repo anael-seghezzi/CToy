@@ -208,6 +208,7 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_window_height", ctoy_window_height);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_x", ctoy_mouse_x);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_y", ctoy_mouse_y);
+   tcc_add_symbol(ctoy__tcc, "ctoy_tablet_pressure", ctoy_tablet_pressure);
    tcc_add_symbol(ctoy__tcc, "ctoy_get_time", ctoy_get_time);
    tcc_add_symbol(ctoy__tcc, "ctoy_sleep", ctoy_sleep);
    tcc_add_symbol(ctoy__tcc, "ctoy_key_press", ctoy_key_press);

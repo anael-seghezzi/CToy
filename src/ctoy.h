@@ -42,6 +42,7 @@ int ctoy_window_width(void);
 int ctoy_window_height(void);
 float ctoy_mouse_x(void);
 float ctoy_mouse_y(void);
+float ctoy_tablet_pressure(void);
 double ctoy_get_time(void);
 void ctoy_sleep(long sec, long nsec);
 int ctoy_argc(void);
