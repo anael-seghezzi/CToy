@@ -856,6 +856,8 @@ EasyTabResult EasyTab_Load_Ex(HWND Window,
 
         if (TrackingMode == EASYTAB_TRACKING_MODE_RELATIVE)
         {
+			uint32_t Sensitivity;
+
             LogContext.lcPktMode |= PK_X | PK_Y; // TODO: Should this be included in the
                                                  //       PACKETMODE macro define up top?
             LogContext.lcSysMode = 1;
@@ -878,7 +880,7 @@ EasyTabResult EasyTab_Load_Ex(HWND Window,
             // = 65,536 Decimal
             // = 0000 0000 0000 0001 . 0000 0000 0000 0000 Binary
             // = 1.0 Fixed Point
-            uint32_t Sensitivity = (uint32_t)(0x10000 * RelativeModeSensitivity);
+            Sensitivity = (uint32_t)(0x10000 * RelativeModeSensitivity);
 
             if (MoveCursor)
             {
