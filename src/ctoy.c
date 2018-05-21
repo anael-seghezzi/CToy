@@ -69,7 +69,12 @@
 
 #include <GLFW/glfw3.h>
 
-#ifdef __linux__
+#ifdef WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#define EASYTAB_IMPLEMENTATION
+#include "easytab.h"
+#elif defined(__linux__)
 #define GLFW_EXPOSE_NATIVE_X11
 #include <GLFW/glfw3native.h>
 #define EASYTAB_IMPLEMENTATION
@@ -291,7 +296,12 @@ static int ctoy__window_init(const char *title, int fullscreen)
    glfwMakeContextCurrent(ctoy__window);
    glfwSwapInterval(1);
 
-#ifdef __linux__
+#ifdef WIN32
+   {
+	   HWND w32window = glfwGetWin32Window(ctoy__window);
+	   EasyTab_Load(w32window);
+   }
+#elif defined(__linux__)
    {
       Window xwindow = glfwGetX11Window(ctoy__window);
       Display *xdisplay = glfwGetX11Display();
@@ -432,18 +442,23 @@ static void ctoy__update(void)
    ctoy__char_count = 0;
 
    /* tablet events */
-#ifdef __linux__
+#ifdef WIN32
+   {
+       HWND w32window = glfwGetWin32Window(ctoy__window); MSG msg;
+	   if (PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+	       if (EasyTab_HandleEvent(msg.hwnd, msg.message, msg.lParam, msg.wParam) == EASYTAB_OK)
+			   ctoy__tablet_pressure = EasyTab->Pressure;
+	   }
+   }
+#elif defined(__linux__)
    {
       Display *xdisplay = glfwGetX11Display();
       int count = XPending(xdisplay);
-      while (count--)
-      {
+      while (count--) {
          XEvent event;
          XPeekEvent(xdisplay, &event);
          if (EasyTab_HandleEvent(&event) == EASYTAB_OK)
-         {
          	ctoy__tablet_pressure = EasyTab->Pressure;
-         }
       }
    }
 #endif
