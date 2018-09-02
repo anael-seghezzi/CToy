@@ -58,6 +58,36 @@ void ctoy_main_loop() // called at every update of the main loop
 void ctoy_end() // called at the end of the program
 {}
 ```
+Every time you modify src/main.c or any other file connected to it (direclty or recursively included), C-Toy will recompile and restart the program dynamically.
+
+One other difference with standard C is the use of persistent memory to maintain a bloc of memory intact between recompiles. For example :
+
+```c
+#include <ctoy.h>
+
+void *persistent_memory = NULL;
+
+void ctoy_begin()
+{
+   if (ctoy_t() == 0) {
+      persistent_memory = calloc(256, 1); // allocate 256 bytes with zero value
+      ctoy_register_memory(persistent_memory); // register persistent memory
+   }
+   else {
+      persistent_memory = ctoy_retrieve_memory(); // retrieve persistent memory
+   }
+}
+
+void ctoy_main_loop()
+{
+   int *persistent_counter = (int *)persistent_memory; // access a piece of persistent memory
+   (*persistent_counter)++; // do something with the data
+   printf("persistent_counter = %d\n", (*persistent_counter)); // print the content
+}
+
+void ctoy_end()
+{}
+```
 
 Documentation
 -------------
