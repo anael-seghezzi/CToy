@@ -15,7 +15,7 @@ Features
 * OpenGLES-2 simulation
 * OpenAL
 * Embedded libtcc
-* Plug external libraries: use C-symbols from dll or dylib files
+* Plug external libraries: use C-symbols from dll or dylib files (copy libraries in your_ctoy_path/lib/ folder)
 * Can also compile your project with other compilers (CMake script for gcc, vs, mingw)
 * Emscripten compatible (tool in progress)
 
@@ -36,6 +36,37 @@ Getting started
 - Save your file(s) and see the result in realtime
 
 <p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
+
+Usage
+-----
+
+C-Toy expects a main file in src/main.c.<br>
+But instead of the standad C "main" function, the entry points are "ctoy_begin", "ctoy_main_loop" and "ctoy_end".
+
+The compulsory "Hello, World!" program is then (in src/main.c):<br>
+```c
+#include <ctoy.h> // ctoy API (including frequently used ANSI C libs)
+
+void ctoy_begin() // called at the beginning of the program
+{
+   printf("Hello, World!\n");
+}
+
+void ctoy_main_loop() // called at every update of the main loop
+{}
+
+void ctoy_end() // called at the end of the program
+{}
+```
+
+Documentation
+-------------
+
+C-Toy API: https://github.com/anael-seghezzi/CToy/blob/master/ressources/include/ctoy.h<br>
+MaratisTCL: https://github.com/anael-seghezzi/Maratis-Tiny-C-library<br>
+OpenGLES2: https://www.khronos.org/registry/OpenGL-Refpages/es2.0/<br>
+OpenAL: https://www.openal.org/documentation/OpenAL_Programmers_Guide.pdf<br>
+
 
 Building CToy from sources (CMake)
 ----------------------------------
