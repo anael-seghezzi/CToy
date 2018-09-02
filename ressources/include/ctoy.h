@@ -39,50 +39,53 @@
 #include "m_math.h"
 #include "m_image.h"
 
-#define CTOY_CHAR_MAX 256
+#define CTOY_CHAR_MAX 256 // maximum characters per update
 
-/* custom calls */
-void ctoy_begin(void);
-void ctoy_main_loop(void);
-void ctoy_end(void);
+/* main entry points for ctoy */
+void ctoy_begin(void); // called at the beginning of the program
+void ctoy_main_loop(void); // called at every update of the main loop
+void ctoy_end(void); // called at the end of the program
 
-/* API */
-unsigned long ctoy_t(void);
-int ctoy_window_width(void);
-int ctoy_window_height(void);
-float ctoy_mouse_x(void);
-float ctoy_mouse_y(void);
-float ctoy_tablet_pressure(void);
-double ctoy_get_time(void);
-void ctoy_sleep(long sec, long nsec);
-int ctoy_argc(void);
-char **ctoy_argv(void);
+/* system */
+unsigned long ctoy_t(void); // return ctoy current tick (number of updates since ctoy started)
+double ctoy_get_time(void); // return ctoy current time (seconds elapsed since ctoy started)
+void ctoy_sleep(long sec, long nsec); // suspend execution for second + nanosecond intervals
+int ctoy_argc(void); // return standard argc
+char **ctoy_argv(void); // return standard argv
 
-void ctoy_window_size(int width, int height);
-void ctoy_window_title(const char *title);
-void ctoy_window_fullscreen(int state);
-void ctoy_swap_buffer(struct m_image *src);
+/* window managment */
+int ctoy_window_width(void); // return window's width
+int ctoy_window_height(void); // return windows's height
+void ctoy_window_size(int width, int height); // set window's size
+void ctoy_window_title(const char *title); // set window's title
+void ctoy_window_fullscreen(int state); // set window's fullscreen mode
+void ctoy_swap_buffer(struct m_image *src); // swap current buffer with optional image (use NULL for GLES swap)
 
-int ctoy_key_press(int key);
-int ctoy_key_release(int key);
-int ctoy_key_pressed(int key);
+/* keyboard events */
+int ctoy_key_press(int key); // return 1 on key press, or return 0
+int ctoy_key_release(int key); // return 1 on key release, or return 0
+int ctoy_key_pressed(int key); // return 1 if key is currently pressed, or return 0
+int ctoy_get_chars(unsigned int dest[CTOY_CHAR_MAX]); // return number of characters typed and get a copy
 
-int ctoy_mouse_button_press(int button);
-int ctoy_mouse_button_release(int button);
-int ctoy_mouse_button_pressed(int button);
+/* mouse events */
+float ctoy_mouse_x(void); // return mouse x position
+float ctoy_mouse_y(void); // return mouse y position
+int ctoy_mouse_button_press(int button); // return 1 on mouse-button press, or return 0
+int ctoy_mouse_button_release(int button); // return 1 on mouse-button release, or return 0
+int ctoy_mouse_button_pressed(int button); // return 1 if mouse-button is currently pressed, or return 0
 
-int ctoy_joystick_present(int joy);
-int ctoy_joystick_axis_count(int joy);
-int ctoy_joystick_button_count(int joy);
-int ctoy_joystick_button_press(int joy, int button);
-int ctoy_joystick_button_release(int joy, int button);
-int ctoy_joystick_button_pressed(int joy, int button);
-float ctoy_joystick_axis(int joy, int axis);
+/* joysticks events */
+int ctoy_joystick_present(int joy); // return 1 if joystick is present, or return 0
+int ctoy_joystick_axis_count(int joy); // return joystick's number of axis
+int ctoy_joystick_button_count(int joy); // return joystick's number of buttons
+int ctoy_joystick_button_press(int joy, int button); // return 1 on joystick-button press, or return 0
+int ctoy_joystick_button_release(int joy, int button); // return 1 on joystick-button release, or return 0
+int ctoy_joystick_button_pressed(int joy, int button); // return 1 if joystick-button is currently pressed, or return 0
+float ctoy_joystick_axis(int joy, int axis); // return joystick axis's value
 
-int ctoy_get_chars(unsigned int dest[CTOY_CHAR_MAX]);
-
-void ctoy_register_memory(void *memory);
-void *ctoy_retrieve_memory(void);
+/* persistent memory */
+void ctoy_register_memory(void *memory); // register global memory pointer
+void *ctoy_retrieve_memory(void); // return previously registered global memory pointer
 
 /* keys (glfw mapping) */
 #define CTOY_KEY_SPACE              32
