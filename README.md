@@ -15,7 +15,7 @@ Features
 * OpenGLES-2 simulation
 * OpenAL
 * Embedded libtcc
-* Plug external libraries: use C-symbols from dll or dylib files
+* Plug external libraries: use C-symbols from dll or dylib files (copy libraries in your_ctoy_path/lib/ folder)
 * Can also compile your project with other compilers (CMake script for gcc, vs, mingw)
 * Emscripten compatible (tool in progress)
 
@@ -36,6 +36,67 @@ Getting started
 - Save your file(s) and see the result in realtime
 
 <p><img src="http://anael.maratis3d.com/ctoy/doc/preview.gif" width="75%" height="75%"/></p>
+
+Usage
+-----
+
+C-Toy expects a main file in src/main.c.<br>
+But instead of the standad C "main" function, the entry points are "ctoy_begin", "ctoy_main_loop" and "ctoy_end".
+
+The compulsory "Hello, World!" program is then (in src/main.c):<br>
+```c
+#include <ctoy.h> // ctoy API (including frequently used ANSI C libs)
+
+void ctoy_begin() // called at the beginning of the program
+{
+   printf("Hello, World!\n");
+}
+
+void ctoy_main_loop() // called at every update of the main loop
+{}
+
+void ctoy_end() // called at the end of the program
+{}
+```
+Every time you modify src/main.c or any other file connected to it (direclty or recursively included), C-Toy will recompile and restart the program dynamically.
+
+One other difference with standard C is the use of persistent memory to maintain a bloc of memory intact between recompiles. For example :
+
+```c
+#include <ctoy.h>
+
+void *persistent_memory = NULL;
+
+void ctoy_begin()
+{
+   if (ctoy_t() == 0) {
+      persistent_memory = calloc(256, 1); // allocate 256 bytes with zero value
+      ctoy_register_memory(persistent_memory); // register persistent memory
+   }
+   else {
+      persistent_memory = ctoy_retrieve_memory(); // retrieve persistent memory
+   }
+}
+
+void ctoy_main_loop()
+{
+   int *persistent_counter = (int *)persistent_memory; // access a piece of persistent memory
+   (*persistent_counter)++; // do something with the data
+   printf("persistent_counter = %d\n", (*persistent_counter)); // print the content
+}
+
+void ctoy_end()
+{}
+```
+
+Documentation
+-------------
+
+C-Toy API: https://github.com/anael-seghezzi/CToy/blob/master/ressources/include/ctoy.h<br>
+MaratisTCL: https://github.com/anael-seghezzi/Maratis-Tiny-C-library<br>
+OpenGLES2: https://www.khronos.org/registry/OpenGL-Refpages/es2.0/<br>
+OpenAL: https://www.openal.org/documentation/OpenAL_Programmers_Guide.pdf<br>
+
 
 Building CToy from sources (CMake)
 ----------------------------------
