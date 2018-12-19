@@ -150,6 +150,7 @@ MIAPI void  m_normalize(float *dest, const float *src, int size); /* dest = src 
 MIAPI void  m_normalize_sum(float *dest, const float *src, int size); /* dest = src / sum(src) */
 MIAPI float m_mean(const float *src, int size);
 MIAPI float m_squared_distance(const float *src1, const float *src2, int size);
+MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size);
 MIAPI float m_convolution(const float *src1, const float *src2, int size); /* a dot product really */
 MIAPI float m_chi_squared_distance(const float *src1, const float *src2, int size); /* good at estimating signed hystograms difference */
 
@@ -470,10 +471,12 @@ MIAPI void m_gaussian_kernel(float *dest, int size, float radius)
 
 MIAPI void m_sst(float *dest, const float *src, int count)
 {
-   int i;
+   register int i;
+   register float dx;
+   register float dy;
    for (i = 0; i < count; i++) {
-      float dx = src[0];
-      float dy = src[1];
+      dx = src[0];
+      dy = src[1];
       dest[0] = dx*dx;
       dest[1] = dy*dy;
       dest[2] = dx*dy;
@@ -504,17 +507,19 @@ MIAPI void m_tfm(float *dest, const float *src, int count)
          float dx2 = src[0];
          float dy2 = src[1];
          float dxy = src[2];
-         float l = 0.5f * (dx2 + dy2 + sqrtf((dy2 - dx2) * (dy2 - dx2) + 4.0f * dxy * dxy));
-         dest[0] = dx2 - l;
+         float sqd = (dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy);
+         float lambda = 0.5f * (dy2 + dx2 + sqrtf(M_MAX(0, sqd)));
+         dest[0] = dx2 - lambda;
          dest[1] = dxy;
       }
       else {
          float dy2 = src[0];
          float dx2 = src[1];
          float dxy = src[2];
-         float l = 0.5f * (dx2 + dy2 + sqrtf((dy2 - dx2) * (dy2 - dx2) + 4.0f * dxy * dxy));
+         float sqd = (dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy);
+         float lambda = 0.5f * (dy2 + dx2 + sqrtf(M_MAX(0, sqd)));
          dest[0] = dxy;
-         dest[1] = dx2 - l;
+         dest[1] = dx2 - lambda;
       }
 
       src += 3;
@@ -589,14 +594,42 @@ MIAPI float m_mean(const float *src, int size)
    return size > 0 ? mean / (float)size : 0;
 }
 
-MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
+MIAPI float m_squared_distance_omp(const float *src1, const float *src2, int size)
 {
-   float score = 0; int i;
+   register float score = 0; 
+   register int i;
+   register float x;
+
+   #pragma omp parallel for schedule(dynamic, 4096) reduction(+:score) 
    for (i = 0; i < size; i++) {
-      float x = src2[i] - src1[i];
+      x = src2[i] - src1[i];
       score += x * x;
    }
    return score;
+}
+
+
+MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
+{
+   register float score = 0.0f; 
+   register int i;
+   register float x;
+   //todo vector lane
+   for (i = 0; i < size; i++) {
+      x = src2[i] - src1[i];
+      score += x * x;
+   }
+   return score;
+}
+
+MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size)
+{
+   if (size >= 4096*4) {
+      return m_squared_distance_omp(src1,src2,size);
+   }
+   else {
+      return m_squared_distance(src1,src2,size);
+   }
 }
 
 /* m_half2float / m_float2half :
@@ -1147,6 +1180,8 @@ MIAPI void m_image_create(struct m_image *image, char type, int width, int heigh
    M_SAFE_FREE(image->data);
 
    image->data = malloc(size * m_type_sizeof(type));
+   if( !image->data ) 
+		printf("BAD ALLOC:m_image_create\n");
    image->type = type;
    image->width = width;
    image->height = height;
@@ -2101,7 +2136,7 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* exit */
    if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
       if (dest != src) m_image_copy(dest, src);
-      return;
+	  return;
    }
 
    /* x blur */
@@ -2218,30 +2253,28 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src)
    struct m_image copy = M_IMAGE_IDENTITY();
    float ky[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
    float kx[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-   float *src_pixel;
-   float *dest_pixel;
    int width = src->width;
    int height = src->height;
    int w2 = width + 2;
-   int x, y;
-
+   int y;
+   
    assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
 
    /* create source and destination images */
    m_image_reframe(&copy, src, 1, 1, 1, 1); /* apply clamped margin */
    m_image_create(dest, M_FLOAT, width, height, 2);
-
-   src_pixel = (float *)copy.data;
-   dest_pixel = (float *)dest->data;
-
+   
+   #pragma omp parallel for schedule(dynamic, 8)
    for (y = 0; y < height; y++) {
+	  float * src_pixel = (float*)copy.data + y * w2;
+	  float * dest_pixel = (float*)dest->data + y * width * 2;
+	  int x;
       for (x = 0; x < width; x++) {
          dest_pixel[0] = m__convolve_pixel(src_pixel, w2, kx);
          dest_pixel[1] = m__convolve_pixel(src_pixel, w2, ky);
          src_pixel++;
          dest_pixel += 2;
       }
-      src_pixel += 2;
    }
 
    m_image_destroy(&copy);

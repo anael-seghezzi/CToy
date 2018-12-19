@@ -145,9 +145,15 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
 MMAPI unsigned int m_next_power_of_two(unsigned int x);
 
 /* rand (Marsaglia MWC generator) */
+typedef struct {unsigned int z, w;} m_rand_desc;
+#define M_RAND_DESC_DEFAULT() {362436069, 521288629}
+
+MMAPI unsigned int m_rand_user(m_rand_desc *desc);
+MMAPI float m_randf_user(m_rand_desc *desc);
+
 MMAPI void m_srand(unsigned int z, unsigned int w);
 MMAPI unsigned int m_rand(void);
-MMAPI float m_randf(void); /* (0 - 1) range */
+MMAPI float m_randf(void);
 
 /* interpolation */
 MMAPI float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu);
@@ -215,8 +221,7 @@ MMAPI float m_3d_ray_triangle_intersection(float3 *ray_origin, float3 *ray_direc
 #include <math.h>
 #endif
 
-static unsigned int m__rz = 362436069;
-static unsigned int m__rw = 521288629;
+static m_rand_desc m__rand_global_desc = M_RAND_DESC_DEFAULT();
 
 MMAPI unsigned int m_next_power_of_two(unsigned int x)
 {
@@ -232,23 +237,33 @@ MMAPI unsigned int m_next_power_of_two(unsigned int x)
    return x;
 }
 
+MMAPI unsigned int m_rand_user(m_rand_desc *desc)
+{
+   desc->z = 36969 * (desc->z & 65535) + (desc->z >> 16);
+   desc->w = 18000 * (desc->w & 65535) + (desc->w >> 16);
+   return (desc->z << 16) + desc->w;
+}
+
+MMAPI float m_randf_user(m_rand_desc *desc)
+{
+   unsigned int u = m_rand_user(desc);
+   return (u + 1.0) * 2.328306435454494e-10;
+}
+
 MMAPI void m_srand(unsigned int z, unsigned int w)
 {
-   m__rz = z;
-   m__rw = w;
+   m__rand_global_desc.z = z;
+   m__rand_global_desc.w = w;
 }
 
 MMAPI unsigned int m_rand(void)
 {
-   m__rz = 36969 * (m__rz & 65535) + (m__rz >> 16);
-   m__rw = 18000 * (m__rw & 65535) + (m__rw >> 16);
-   return (m__rz << 16) + m__rw;
+   return m_rand_user(&m__rand_global_desc);
 }
 
 MMAPI float m_randf(void)
 {
-   unsigned int u = m_rand();
-   return (u + 1.0) * 2.328306435454494e-10;
+   return m_randf_user(&m__rand_global_desc);
 }
 
 MMAPI float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu)

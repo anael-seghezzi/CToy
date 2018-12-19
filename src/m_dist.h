@@ -97,7 +97,7 @@ k = 0;\
 for (q = 1; q < count; q++) {\
    float s;\
    while (1) {\
-      s = ((src[q] + q * q) - (src[v[k]] + v[k] * v[k])) / (float)(2 * q - 2 * v[k]);\
+      s = (((double)src[q] + q * q) - ((double)src[v[k]] + v[k] * v[k])) / (double)(2 * q - 2 * v[k]);\
       if (s > z[k])\
          break;\
       k--;\
@@ -147,6 +147,7 @@ void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count)
 
 void m_dist_transform_2d(float *dest, float *src, int width, int height)
 {
+	
    float *tmp1 = (float *)malloc(M_MAX(width, height) * sizeof(float));
    float *tmp2 = (float *)malloc(M_MAX(width, height) * sizeof(float));
    int x, y;
@@ -173,6 +174,7 @@ void m_dist_transform_2d(float *dest, float *src, int width, int height)
 
    free(tmp2);
    free(tmp1);
+   
 }
 
 void m_voronoi_transform_2d(float *destd, int *desti, float *src, int width, int height)
@@ -271,7 +273,7 @@ void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, con
    int height = src->height;
    int size = src->size;
    int i;
-   
+
    assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
    m_image_create(destd, M_FLOAT, width, height, 1);
    m_image_create(desti, M_INT, width, height, 1);
