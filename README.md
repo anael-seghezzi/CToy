@@ -3,7 +3,7 @@ C-Toy
 
 C-Toy is an interactive C(99) coding environment based on [TCC](http://bellard.org/tcc/).
 
-Small, simple, no bullshit. Write cross-platform C code and see the result immediately. No installation or compiler required, download (~2mb), unzip, run CToy and play. Ready for Windows 64 bit and MacOSX 64 bit (linux in progress). Ideal for games, image processing, teaching, prototyping...
+Small, simple, no bullshit. Write cross-platform C code and see the result immediately. No installation or compiler required, download (~2mb), unzip, run CToy and play. Ready for Windows, MacOSX and Linux. Ideal for prototyping, learning, teaching...
 
 Features
 --------
@@ -12,19 +12,18 @@ Features
 * CToy_player: to publish your project (dynamic update disabled)
 * API for window managment, inputs, persistent memory...
 * Image processing with [MaratisTCL](https://github.com/anael-seghezzi/Maratis-Tiny-C-library)
-* OpenGLES-2 simulation
+* OpenGLES-2
 * OpenAL
-* Embedded libtcc
-* Plug external libraries: use C-symbols from dll or dylib files (copy libraries in your_ctoy_path/lib/ folder)
+* Use C-symbols from native dynamic libraries (*.dll etc) : just copy libraries in your_ctoy_path/lib/
 * Can also compile your project with other compilers (CMake script for gcc, vs, mingw)
-* Emscripten compatible (tool in progress)
+* Emscripten compatible
 
 Download
 --------
 
 [- CToy 1.01 Win64](http://anael.maratis3d.com/ctoy/bin/CToy-1.01-WIN-x86_64.zip)<br>
 [- CToy 1.01 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.01-OSX_10.6-x86_64.zip)<br>
-[- CToy 1.01 Linux](http://anael.maratis3d.com/ctoy/bin/CToy-1.01-LINUX-x86_64.zip) (beta) <br>
+[- CToy 1.01 Linux64](http://anael.maratis3d.com/ctoy/bin/CToy-1.01-LINUX-x86_64.zip)<br>
 [- [all versions]](http://anael.maratis3d.com/ctoy/bin/)
 
 Getting started
