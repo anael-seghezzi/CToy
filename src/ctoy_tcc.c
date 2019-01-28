@@ -243,6 +243,8 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_srand", m_srand);
    tcc_add_symbol(ctoy__tcc, "m_rand", m_rand);
    tcc_add_symbol(ctoy__tcc, "m_randf", m_randf);
+   tcc_add_symbol(ctoy__tcc, "m_rand_user", m_rand_user);
+   tcc_add_symbol(ctoy__tcc, "m_randf_user", m_randf_user);
    tcc_add_symbol(ctoy__tcc, "m_normalize", m_normalize);
    tcc_add_symbol(ctoy__tcc, "m_normalize_sum", m_normalize_sum);
    tcc_add_symbol(ctoy__tcc, "m_mean", m_mean);

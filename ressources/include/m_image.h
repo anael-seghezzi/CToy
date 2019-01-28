@@ -150,6 +150,7 @@ MIAPI void  m_normalize(float *dest, const float *src, int size); /* dest = src 
 MIAPI void  m_normalize_sum(float *dest, const float *src, int size); /* dest = src / sum(src) */
 MIAPI float m_mean(const float *src, int size);
 MIAPI float m_squared_distance(const float *src1, const float *src2, int size);
+MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size);
 MIAPI float m_convolution(const float *src1, const float *src2, int size); /* a dot product really */
 MIAPI float m_chi_squared_distance(const float *src1, const float *src2, int size); /* good at estimating signed hystograms difference */
 

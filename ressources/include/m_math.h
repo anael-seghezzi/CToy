@@ -145,9 +145,15 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
 MMAPI unsigned int m_next_power_of_two(unsigned int x);
 
 /* rand (Marsaglia MWC generator) */
+typedef struct {unsigned int z, w;} m_rand_desc;
+#define M_RAND_DESC_DEFAULT() {362436069, 521288629}
+
+MMAPI unsigned int m_rand_user(m_rand_desc *desc);
+MMAPI float m_randf_user(m_rand_desc *desc);
+
 MMAPI void m_srand(unsigned int z, unsigned int w);
 MMAPI unsigned int m_rand(void);
-MMAPI float m_randf(void); /* (0 - 1) range */
+MMAPI float m_randf(void);
 
 /* interpolation */
 MMAPI float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu);

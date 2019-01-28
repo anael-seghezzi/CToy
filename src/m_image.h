@@ -594,42 +594,17 @@ MIAPI float m_mean(const float *src, int size)
    return size > 0 ? mean / (float)size : 0;
 }
 
-MIAPI float m_squared_distance_omp(const float *src1, const float *src2, int size)
-{
-   register float score = 0; 
-   register int i;
-   register float x;
-
-   #pragma omp parallel for schedule(dynamic, 4096) reduction(+:score) 
-   for (i = 0; i < size; i++) {
-      x = src2[i] - src1[i];
-      score += x * x;
-   }
-   return score;
-}
-
-
 MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
 {
    register float score = 0.0f; 
    register int i;
    register float x;
-   //todo vector lane
+
    for (i = 0; i < size; i++) {
       x = src2[i] - src1[i];
       score += x * x;
    }
    return score;
-}
-
-MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size)
-{
-   if (size >= 4096*4) {
-      return m_squared_distance_omp(src1,src2,size);
-   }
-   else {
-      return m_squared_distance(src1,src2,size);
-   }
 }
 
 /* m_half2float / m_float2half :
