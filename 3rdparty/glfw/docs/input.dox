@@ -1,7 +1,7 @@
 /*!
 
 @page input_guide Input guide
- 
+
 @tableofcontents
 
 This guide introduces the input related functions of GLFW.  For details on
@@ -57,8 +57,7 @@ glfwWaitEvents();
 
 It puts the thread to sleep until at least one event has been received and then
 processes all received events.  This saves a great deal of CPU cycles and is
-useful for, for example, editing tools.  There must be at least one GLFW window
-for this function to sleep.
+useful for, for example, editing tools.
 
 If you want to wait for events but have UI elements or other tasks that need
 periodic updates, @ref glfwWaitEventsTimeout lets you specify a timeout.
@@ -162,13 +161,26 @@ missed the key press.  The recommended solution for this is to use a
 key callback, but there is also the `GLFW_STICKY_KEYS` input mode.
 
 @code
-glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
+glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 @endcode
 
 When sticky keys mode is enabled, the pollable state of a key will remain
 `GLFW_PRESS` until the state of that key is polled with @ref glfwGetKey.  Once
 it has been polled, if a key release event had been processed in the meantime,
 the state will reset to `GLFW_RELEASE`, otherwise it will remain `GLFW_PRESS`.
+
+@anchor GLFW_LOCK_KEY_MODS
+If you wish to know what the state of the Caps Lock and Num Lock keys was when
+input events were generated, set the `GLFW_LOCK_KEY_MODS` input mode.
+
+@code
+glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+@endcode
+
+When this input mode is enabled, any callback that receives
+[modifier bits](@ref mods) will have the @ref GLFW_MOD_CAPS_LOCK bit set if Caps
+Lock was on when the event occurred and the @ref GLFW_MOD_NUM_LOCK bit set if
+Num Lock was on.
 
 The `GLFW_KEY_LAST` constant holds the highest value of any
 [named key](@ref keys).
@@ -186,8 +198,7 @@ encode the code points into UTF-8 or any other encoding you prefer.
 Because an `unsigned int` is 32 bits long on all platforms supported by GLFW,
 you can treat the code point argument as native endian UTF-32.
 
-There are two callbacks for receiving Unicode code points.  If you wish to
-offer regular text input, set a character callback.
+If you wish to offer regular text input, set a character callback.
 
 @code
 glfwSetCharCallback(window, character_callback);
@@ -199,23 +210,6 @@ that platform.
 
 @code
 void character_callback(GLFWwindow* window, unsigned int codepoint)
-{
-}
-@endcode
-
-If you wish to receive even those Unicode code points generated with modifier
-key combinations that a plain text field would ignore, or just want to know
-exactly what modifier keys were used, set a character with modifiers callback.
-
-@code
-glfwSetCharModsCallback(window, charmods_callback);
-@endcode
-
-The callback function receives Unicode code points and
-[modifier bits](@ref mods).
-
-@code
-void charmods_callback(GLFWwindow* window, unsigned int codepoint, int mods)
 {
 }
 @endcode
@@ -239,7 +233,7 @@ arguments can always be passed unmodified to this function.
 
 @section input_mouse Mouse input
 
-Mouse input comes in many forms, including cursor motion, button presses and
+Mouse input comes in many forms, including mouse motion, button presses and
 scrolling offsets.  The cursor appearance can also be changed, either to
 a custom image or a standard cursor shape from the system theme.
 
@@ -250,11 +244,11 @@ If you wish to be notified when the cursor moves over the window, set a cursor
 position callback.
 
 @code
-glfwSetCursorPosCallback(window, cursor_pos_callback);
+glfwSetCursorPosCallback(window, cursor_position_callback);
 @endcode
 
 The callback functions receives the cursor position, measured in screen
-coordinates but relative to the top-left corner of the window client area.  On
+coordinates but relative to the top-left corner of the window content area.  On
 platforms that provide it, the full sub-pixel cursor position is passed on.
 
 @code
@@ -297,8 +291,8 @@ is provided normally via both the cursor position callback and through polling.
 other features of GLFW.  It is not supported and will not work as robustly as
 `GLFW_CURSOR_DISABLED`.
 
-If you just wish the cursor to become hidden when it is over a window, set
-the cursor mode to `GLFW_CURSOR_HIDDEN`.
+If you only wish the cursor to become hidden when it is over a window but still
+want it to behave normally, set the cursor mode to `GLFW_CURSOR_HIDDEN`.
 
 @code
 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -312,6 +306,31 @@ cursor mode.
 @code
 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 @endcode
+
+
+@anchor GLFW_RAW_MOUSE_MOTION
+@subsection raw_mouse_motion Raw mouse motion
+
+When the cursor is disabled, raw (unscaled and unaccelerated) mouse motion can
+be enabled if available.
+
+Raw mouse motion is closer to the actual motion of the mouse across a surface.
+It is not affected by the scaling and acceleration applied to the motion of the
+desktop cursor.  That processing is suitable for a cursor while raw motion is
+better for controlling for example a 3D camera.  Because of this, raw mouse
+motion is only provided when the cursor is disabled.
+
+Call @ref glfwRawMouseMotionSupported to check if the current machine provides
+raw motion and set the `GLFW_RAW_MOUSE_MOTION` input mode to enable it.  It is
+disabled by default.
+
+@code
+if (glfwRawMouseMotionSupported())
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+@endcode
+
+If supported, raw mouse motion can be enabled or disabled per-window and at any
+time but it will only be provided when the cursor is disabled.
 
 
 @subsection cursor_object Cursor objects
@@ -371,8 +390,7 @@ glfwDestroyCursor(cursor);
 
 Cursor destruction always succeeds.  If the cursor is current for any window,
 that window will revert to the default cursor.  This does not affect the cursor
-mode.  All remaining cursors remaining are destroyed when @ref glfwTerminate is
-called.
+mode.  All remaining cursors are destroyed when @ref glfwTerminate is called.
 
 
 @subsubsection cursor_set Cursor setting
@@ -384,7 +402,7 @@ glfwSetCursor(window, cursor);
 @endcode
 
 Once set, the cursor image will be used as long as the system cursor is over the
-client area of the window and the [cursor mode](@ref cursor_mode) is set
+content area of the window and the [cursor mode](@ref cursor_mode) is set
 to `GLFW_CURSOR_NORMAL`.
 
 A single cursor may be set for any number of windows.
@@ -401,7 +419,7 @@ default cursor.  This does not affect the cursor mode.
 
 @subsection cursor_enter Cursor enter/leave events
 
-If you wish to be notified when the cursor enters or leaves the client area of
+If you wish to be notified when the cursor enters or leaves the content area of
 a window, set a cursor enter/leave callback.
 
 @code
@@ -415,12 +433,22 @@ void cursor_enter_callback(GLFWwindow* window, int entered)
 {
     if (entered)
     {
-        // The cursor entered the client area of the window
+        // The cursor entered the content area of the window
     }
     else
     {
-        // The cursor left the client area of the window
+        // The cursor left the content area of the window
     }
+}
+@endcode
+
+You can query whether the cursor is currently inside the content area of the
+window with the [GLFW_HOVERED](@ref GLFW_HOVERED_attrib) window attribute.
+
+@code
+if (glfwGetWindowAttrib(window, GLFW_HOVERED))
+{
+    highlight_interface();
 }
 @endcode
 
@@ -471,7 +499,7 @@ mouse button callback, but there is also the `GLFW_STICKY_MOUSE_BUTTONS`
 input mode.
 
 @code
-glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
+glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 @endcode
 
 When sticky mouse buttons mode is enabled, the pollable state of a mouse button
@@ -501,7 +529,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 @endcode
 
-A simple mouse wheel, being vertical, provides offsets along the Y-axis.
+A normal mouse wheel, being vertical, provides offsets along the Y-axis.
 
 
 @section joystick Joystick input
@@ -516,7 +544,10 @@ present with @ref glfwJoystickPresent.
 int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 @endcode
 
-When GLFW is initialized, detected joysticks are added to to the beginning of
+Each joystick has zero or more axes, zero or more buttons, zero or more hats,
+a human-readable name, a user pointer and an SDL compatible GUID.
+
+When GLFW is initialized, detected joysticks are added to the beginning of
 the array.  Once a joystick is detected, it keeps its assigned ID until it is
 disconnected or the library is terminated, so as joysticks are connected and
 disconnected, there may appear gaps in the IDs.
@@ -576,7 +607,7 @@ const unsigned char* hats = glfwGetJoystickHats(GLFW_JOYSTICK_7, &count);
 Each element in the returned array is one of the following:
 
 Name                  | Value
---------------------- | --------------------------------
+----                  | -----
 `GLFW_HAT_CENTERED`   | 0
 `GLFW_HAT_UP`         | 1
 `GLFW_HAT_RIGHT`      | 2
@@ -607,7 +638,7 @@ See the reference documentation for @ref glfwGetJoystickButtons for details.
 
 The human-readable, UTF-8 encoded name of a joystick is returned by @ref
 glfwGetJoystickName.  See the reference documentation for the lifetime of the
-returned string.           
+returned string.
 
 @code
 const char* name = glfwGetJoystickName(GLFW_JOYSTICK_4);
@@ -616,6 +647,17 @@ const char* name = glfwGetJoystickName(GLFW_JOYSTICK_4);
 Joystick names are not guaranteed to be unique.  Two joysticks of the same model
 and make may have the same name.  Only the [joystick token](@ref joysticks) is
 guaranteed to be unique, and only until that joystick is disconnected.
+
+
+@subsection joystick_userptr Joystick user pointer
+
+Each joystick has a user pointer that can be set with @ref
+glfwSetJoystickUserPointer and queried with @ref glfwGetJoystickUserPointer.
+This can be used for any purpose you need and will not be modified by GLFW.  The
+value will be kept until the joystick is disconnected or until the library is
+terminated.
+
+The initial value of the pointer is `NULL`.
 
 
 @subsection joystick_event Joystick configuration changes
@@ -649,6 +691,10 @@ platforms, you need to call one of the [event processing](@ref events)
 functions.  Joystick disconnection may also be detected and the callback
 called by joystick functions.  The function will then return whatever it
 returns for a disconnected joystick.
+
+Only @ref glfwGetJoystickName and @ref glfwGetJoystickUserPointer will return
+useful values for a disconnected joystick and only before the monitor callback
+returns.
 
 
 @subsection gamepad Gamepad input
@@ -781,12 +827,17 @@ a hat bitmask or empty.  Joystick buttons are specified as `bN`, for example
 example `h0.8` for left on the first hat.  More than one bit may be set in the
 mask.
 
+Before an axis there may be a `+` or `-` range modifier, for example `+a3` for
+the positive half of the fourth axis.  This restricts input to only the positive
+or negative halves of the joystick axis.  After an axis or half-axis there may
+be the `~` inversion modifier, for example `a2~` or `-a7~`.  This negates the
+values of the gamepad axis.
+
 The hat bit mask match the [hat states](@ref hat_state) in the joystick
 functions.
 
 There is also the special `platform` field that specifies which platform the
 mapping is valid for.  Possible values are `Windows`, `Mac OS X` and `Linux`.
-Mappings without this field will always be considered valid.
 
 Below is an example of what a gamepad mapping might look like.  It is the
 one built into GLFW for Xbox controllers accessed via the XInput API on Windows.
@@ -800,8 +851,9 @@ rightstick:b9,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a4,
 righttrigger:a5,dpup:h0.1,dpright:h0.2,dpdown:h0.4,dpleft:h0.8,
 @endcode
 
-@note GLFW does not yet support the range and inversion modifiers `+`, `-` and
-`~` that were recently added to SDL.
+@note GLFW does not yet support the output range and modifiers `+` and `-` that
+were recently added to SDL.  The input modifiers `+`, `-` and `~` are supported
+and described above.
 
 
 @section time Time input
@@ -847,7 +899,7 @@ converted to one, you can retrieve it with @ref glfwGetClipboardString.  See the
 reference documentation for the lifetime of the returned string.
 
 @code
-const char* text = glfwGetClipboardString(window);
+const char* text = glfwGetClipboardString(NULL);
 if (text)
 {
     insert_text(text);
@@ -861,12 +913,8 @@ The contents of the system clipboard can be set to a UTF-8 encoded string with
 @ref glfwSetClipboardString.
 
 @code
-glfwSetClipboardString(window, "A string with words in it");
+glfwSetClipboardString(NULL, "A string with words in it");
 @endcode
-
-The clipboard functions take a window handle argument because some window
-systems require a window to communicate with the system clipboard.  Any valid
-window may be used.
 
 
 @section path_drop Path drop input

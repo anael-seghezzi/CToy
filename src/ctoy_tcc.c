@@ -208,7 +208,9 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_window_height", ctoy_window_height);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_x", ctoy_mouse_x);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_y", ctoy_mouse_y);
-   tcc_add_symbol(ctoy__tcc, "ctoy_tablet_pressure", ctoy_tablet_pressure);
+   tcc_add_symbol(ctoy__tcc, "ctoy_scroll_x", ctoy_scroll_x);
+   tcc_add_symbol(ctoy__tcc, "ctoy_scroll_y", ctoy_scroll_y);
+   tcc_add_symbol(ctoy__tcc, "ctoy_get_pen_data", ctoy_get_pen_data);
    tcc_add_symbol(ctoy__tcc, "ctoy_get_time", ctoy_get_time);
    tcc_add_symbol(ctoy__tcc, "ctoy_sleep", ctoy_sleep);
    tcc_add_symbol(ctoy__tcc, "ctoy_key_press", ctoy_key_press);
@@ -228,6 +230,7 @@ void ctoy__symbols(void)
 
    tcc_add_symbol(ctoy__tcc, "ctoy_get_chars", ctoy_get_chars);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_size", ctoy_window_size);
+   tcc_add_symbol(ctoy__tcc, "ctoy_render_image", ctoy_render_image);
    tcc_add_symbol(ctoy__tcc, "ctoy_swap_buffer", ctoy_swap_buffer);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_fullscreen", ctoy_window_fullscreen);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_title", ctoy_window_title);
@@ -398,6 +401,21 @@ void ctoy__tcc_symbols(void)
    tcc_add_symbol(ctoy__tcc, "tcc_get_symbol", tcc_get_symbol);
 }
 
+void ctoy__glfw_symbols(void)
+{
+   tcc_add_symbol(ctoy__tcc, "ctoy__get_glfw_window", ctoy__get_glfw_window);
+   tcc_add_symbol(ctoy__tcc, "glfwGetClipboardString", glfwGetClipboardString);
+   tcc_add_symbol(ctoy__tcc, "glfwSetClipboardString", glfwSetClipboardString);
+   tcc_add_symbol(ctoy__tcc, "glfwDestroyCursor", glfwDestroyCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwSetCursorPos", glfwSetCursorPos);
+   tcc_add_symbol(ctoy__tcc, "glfwGetCursorPos", glfwGetCursorPos);
+   tcc_add_symbol(ctoy__tcc, "glfwGetWindowAttrib", glfwGetWindowAttrib);
+   tcc_add_symbol(ctoy__tcc, "glfwGetInputMode", glfwGetInputMode);
+   tcc_add_symbol(ctoy__tcc, "glfwSetInputMode", glfwSetInputMode);
+   tcc_add_symbol(ctoy__tcc, "glfwCreateStandardCursor", glfwCreateStandardCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwSetCursor", glfwSetCursor);
+}
+
 void ctoy__all_symbols(void)
 {
    ctoy__system_symbols();
@@ -405,6 +423,7 @@ void ctoy__all_symbols(void)
    ctoy__symbols();
    ctoy__maratis_symbols();
    ctoy__tcc_symbols();
+   ctoy__glfw_symbols();
 }
 
 void ctoy__add_libs(void)

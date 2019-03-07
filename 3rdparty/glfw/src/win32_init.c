@@ -62,17 +62,6 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 
 #endif // _GLFW_BUILD_DLL
 
-// HACK: Define versionhelpers.h functions manually as MinGW lacks the header
-BOOL IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp)
-{
-    OSVERSIONINFOEXW osvi = { sizeof(osvi), major, minor, 0, 0, {0}, sp };
-    DWORD mask = VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR;
-    ULONGLONG cond = VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL);
-    cond = VerSetConditionMask(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
-    cond = VerSetConditionMask(cond, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
-    return VerifyVersionInfoW(&osvi, mask, cond);
-}
-
 // Load necessary libraries (DLLs)
 //
 static GLFWbool loadLibraries(void)
@@ -100,6 +89,14 @@ static GLFWbool loadLibraries(void)
         GetProcAddress(_glfw.win32.user32.instance, "SetProcessDPIAware");
     _glfw.win32.user32.ChangeWindowMessageFilterEx_ = (PFN_ChangeWindowMessageFilterEx)
         GetProcAddress(_glfw.win32.user32.instance, "ChangeWindowMessageFilterEx");
+    _glfw.win32.user32.EnableNonClientDpiScaling_ = (PFN_EnableNonClientDpiScaling)
+        GetProcAddress(_glfw.win32.user32.instance, "EnableNonClientDpiScaling");
+    _glfw.win32.user32.SetProcessDpiAwarenessContext_ = (PFN_SetProcessDpiAwarenessContext)
+        GetProcAddress(_glfw.win32.user32.instance, "SetProcessDpiAwarenessContext");
+    _glfw.win32.user32.GetDpiForWindow_ = (PFN_GetDpiForWindow)
+        GetProcAddress(_glfw.win32.user32.instance, "GetDpiForWindow");
+    _glfw.win32.user32.AdjustWindowRectExForDpi_ = (PFN_AdjustWindowRectExForDpi)
+        GetProcAddress(_glfw.win32.user32.instance, "AdjustWindowRectExForDpi");
 
     _glfw.win32.dinput8.instance = LoadLibraryA("dinput8.dll");
     if (_glfw.win32.dinput8.instance)
@@ -151,6 +148,30 @@ static GLFWbool loadLibraries(void)
     {
         _glfw.win32.shcore.SetProcessDpiAwareness_ = (PFN_SetProcessDpiAwareness)
             GetProcAddress(_glfw.win32.shcore.instance, "SetProcessDpiAwareness");
+        _glfw.win32.shcore.GetDpiForMonitor_ = (PFN_GetDpiForMonitor)
+            GetProcAddress(_glfw.win32.shcore.instance, "GetDpiForMonitor");
+    }
+
+    _glfw.win32.ntdll.instance = LoadLibraryA("ntdll.dll");
+    if (_glfw.win32.ntdll.instance)
+    {
+        _glfw.win32.ntdll.RtlVerifyVersionInfo_ = (PFN_RtlVerifyVersionInfo)
+            GetProcAddress(_glfw.win32.ntdll.instance, "RtlVerifyVersionInfo");
+    }
+
+    _glfw.win32.wintab32.instance = LoadLibraryA("Wintab32.dll");
+    if (_glfw.win32.wintab32.instance)
+    {
+        _glfw.win32.wintab32.WTInfoA = (PFN_WTInfoA)
+            GetProcAddress(_glfw.win32.wintab32.instance, "WTInfoA");
+        _glfw.win32.wintab32.WTOpenA = (PFN_WTOpenA)
+            GetProcAddress(_glfw.win32.wintab32.instance, "WTOpenA");
+        _glfw.win32.wintab32.WTQueueSizeSet = (PFN_WTQueueSizeSet)
+            GetProcAddress(_glfw.win32.wintab32.instance, "WTQueueSizeSet");
+        _glfw.win32.wintab32.WTClose = (PFN_WTClose)
+            GetProcAddress(_glfw.win32.wintab32.instance, "WTClose");
+        _glfw.win32.wintab32.WTPacket = (PFN_WTPacket)
+            GetProcAddress(_glfw.win32.wintab32.instance, "WTPacket");
     }
 
     return GLFW_TRUE;
@@ -177,6 +198,12 @@ static void freeLibraries(void)
 
     if (_glfw.win32.shcore.instance)
         FreeLibrary(_glfw.win32.shcore.instance);
+
+    if (_glfw.win32.ntdll.instance)
+        FreeLibrary(_glfw.win32.ntdll.instance);
+
+    if (_glfw.win32.wintab32.instance)
+        FreeLibrary(_glfw.win32.wintab32.instance);
 }
 
 // Create key code translation tables
@@ -307,6 +334,7 @@ static void createKeyTables(void)
     _glfw.win32.keycodes[0x053] = GLFW_KEY_KP_DECIMAL;
     _glfw.win32.keycodes[0x135] = GLFW_KEY_KP_DIVIDE;
     _glfw.win32.keycodes[0x11C] = GLFW_KEY_KP_ENTER;
+    _glfw.win32.keycodes[0x059] = GLFW_KEY_KP_EQUAL;
     _glfw.win32.keycodes[0x037] = GLFW_KEY_KP_MULTIPLY;
     _glfw.win32.keycodes[0x04A] = GLFW_KEY_KP_SUBTRACT;
 
@@ -315,6 +343,46 @@ static void createKeyTables(void)
         if (_glfw.win32.keycodes[scancode] > 0)
             _glfw.win32.scancodes[_glfw.win32.keycodes[scancode]] = scancode;
     }
+}
+
+// Init wintab context see https://developer-docs.wacom.com/display/DevDocs/Windows+Wintab+Documentation
+//
+static void initWintabContext(HWND hwnd)
+{
+    if (_glfw.win32.wintab32.instance) {
+        LOGCONTEXTA context = {0};
+
+        _glfw.win32.wintab32.WTInfoA(4, 0, &context);
+        context.lcPktData = 0x0080 | 0x0100 | 0x0200 | 0x0040 | 0x0400 | 0x1000 | 0x0008 | 0x0020; // X Y Z BUTTONS NPRESSURE ORIENTATION CHANGED CURSOR
+        context.lcPktMode = 0;
+        context.lcMoveMask = context.lcPktData;
+        context.lcBtnUpMask = context.lcBtnDnMask;
+        context.lcOptions |= 0x0004; // CXO MESSAGES
+        context.lcOutOrgX = context.lcInOrgX;
+        context.lcOutOrgY = context.lcInOrgY;
+        context.lcOutExtX = context.lcInExtX;
+        context.lcOutExtY = -context.lcInExtY;
+
+        // open wintab context
+        _glfw.win32.wintab32.context = _glfw.win32.wintab32.WTOpenA(hwnd, &context, TRUE);
+        if (_glfw.win32.wintab32.context) {
+            _glfw.win32.wintab32.WTQueueSizeSet(_glfw.win32.wintab32.context, 256);
+            _glfw.win32.wintab32.WTInfoA(4, 0, &_glfw.win32.wintab32.contextInfo);
+            _glfw.win32.wintab32.WTInfoA(100, 15, &_glfw.win32.wintab32.pressureInfo);
+            _glfw.win32.wintab32.WTInfoA(100, 17, &_glfw.win32.wintab32.orientationInfo);
+        }
+    }
+    else {
+        _glfw.win32.wintab32.context = 0;
+    }
+}
+
+// Terminate wintab context
+//
+static void terminateWintabContext(void)
+{
+    if (_glfw.win32.wintab32.instance && _glfw.win32.wintab32.context)
+        _glfw.win32.wintab32.WTClose(_glfw.win32.wintab32.context);
 }
 
 // Creates a dummy window for behind-the-scenes work
@@ -337,8 +405,8 @@ static HWND createHelperWindow(void)
         return NULL;
     }
 
-    // HACK: The first call to ShowWindow is ignored if the parent process
-    //       passed along a STARTUPINFO, so clear that flag with a no-op call
+    // HACK: The command to the first ShowWindow call is ignored if the parent
+    //       process passed along a STARTUPINFO, so clear that with a no-op call
     ShowWindow(window, SW_HIDE);
 
     // Register for HID device notifications
@@ -349,9 +417,10 @@ static HWND createHelperWindow(void)
         dbi.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
         dbi.dbcc_classguid = GUID_DEVINTERFACE_HID;
 
-        RegisterDeviceNotificationW(window,
-                                    (DEV_BROADCAST_HDR*) &dbi,
-                                    DEVICE_NOTIFY_WINDOW_HANDLE);
+        _glfw.win32.deviceNotificationHandle =
+            RegisterDeviceNotificationW(window,
+                                        (DEV_BROADCAST_HDR*) &dbi,
+                                        DEVICE_NOTIFY_WINDOW_HANDLE);
     }
 
     while (PeekMessageW(&msg, _glfw.win32.helperWindowHandle, 0, 0, PM_REMOVE))
@@ -499,6 +568,36 @@ void _glfwUpdateKeyNamesWin32(void)
     }
 }
 
+// Replacement for IsWindowsVersionOrGreater as MinGW lacks versionhelpers.h
+//
+BOOL _glfwIsWindowsVersionOrGreaterWin32(WORD major, WORD minor, WORD sp)
+{
+    OSVERSIONINFOEXW osvi = { sizeof(osvi), major, minor, 0, 0, {0}, sp };
+    DWORD mask = VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR;
+    ULONGLONG cond = VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    cond = VerSetConditionMask(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
+    cond = VerSetConditionMask(cond, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+    // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
+    //       latter lies unless the user knew to embedd a non-default manifest
+    //       announcing support for Windows 10 via supportedOS GUID
+    return RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+}
+
+// Checks whether we are on at least the specified build of Windows 10
+//
+BOOL _glfwIsWindows10BuildOrGreaterWin32(WORD build)
+{
+    OSVERSIONINFOEXW osvi = { sizeof(osvi), 10, 0, build };
+    DWORD mask = VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER;
+    ULONGLONG cond = VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    cond = VerSetConditionMask(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
+    cond = VerSetConditionMask(cond, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+    // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
+    //       latter lies unless the user knew to embedd a non-default manifest
+    //       announcing support for Windows 10 via supportedOS GUID
+    return RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //////                       GLFW platform API                      //////
@@ -520,7 +619,9 @@ int _glfwPlatformInit(void)
     createKeyTables();
     _glfwUpdateKeyNamesWin32();
 
-    if (IsWindows8Point1OrGreater())
+    if (_glfwIsWindows10CreatorsUpdateOrGreaterWin32())
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    else if (IsWindows8Point1OrGreater())
         SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     else if (IsWindowsVistaOrGreater())
         SetProcessDPIAware();
@@ -534,6 +635,7 @@ int _glfwPlatformInit(void)
 
     _glfwInitTimerWin32();
     _glfwInitJoysticksWin32();
+    initWintabContext(_glfw.win32.helperWindowHandle);
 
     _glfwPollMonitorsWin32();
     return GLFW_TRUE;
@@ -541,6 +643,9 @@ int _glfwPlatformInit(void)
 
 void _glfwPlatformTerminate(void)
 {
+    if (_glfw.win32.deviceNotificationHandle)
+        UnregisterDeviceNotification(_glfw.win32.deviceNotificationHandle);
+
     if (_glfw.win32.helperWindowHandle)
         DestroyWindow(_glfw.win32.helperWindowHandle);
 
@@ -558,6 +663,7 @@ void _glfwPlatformTerminate(void)
     _glfwTerminateEGL();
 
     _glfwTerminateJoysticksWin32();
+    terminateWintabContext();
 
     freeLibraries();
 }

@@ -26,6 +26,10 @@
 
 #include "internal.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
+ #define NSOpenGLContextParameterSwapInterval NSOpenGLCPSwapInterval
+ #define NSOpenGLContextParameterSurfaceOpacity NSOpenGLCPSurfaceOpacity
+#endif
 
 static void makeContextCurrentNSGL(_GLFWwindow* window)
 {
@@ -49,7 +53,7 @@ static void swapIntervalNSGL(int interval)
 
     GLint sync = interval;
     [window->context.nsgl.object setValues:&sync
-                              forParameter:NSOpenGLCPSwapInterval];
+                              forParameter:NSOpenGLContextParameterSwapInterval];
 }
 
 static int extensionSupportedNSGL(const char* extension)
@@ -175,7 +179,7 @@ GLFWbool _glfwCreateContextNSGL(_GLFWwindow* window,
         //       Info.plist for unbundled applications
         // HACK: This assumes that NSOpenGLPixelFormat will remain
         //       a straightforward wrapper of its CGL counterpart
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 100800
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
         addAttrib(kCGLPFASupportsAutomaticGraphicsSwitching);
 #endif /*MAC_OS_X_VERSION_MAX_ALLOWED*/
     }
@@ -299,7 +303,8 @@ GLFWbool _glfwCreateContextNSGL(_GLFWwindow* window,
     if (fbconfig->transparent)
     {
         GLint opaque = 0;
-        [window->context.nsgl.object setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
+        [window->context.nsgl.object setValues:&opaque
+                                  forParameter:NSOpenGLContextParameterSurfaceOpacity];
     }
 
     [window->context.nsgl.object setView:window->ns.view];

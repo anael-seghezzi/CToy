@@ -69,18 +69,6 @@
 
 #include <GLFW/glfw3.h>
 
-#ifdef WIN32
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-#define EASYTAB_IMPLEMENTATION
-#include "easytab.h"
-#elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
-#include <GLFW/glfw3native.h>
-#define EASYTAB_IMPLEMENTATION
-#include "easytab.h"
-#endif
-
 #define M_MATH_IMPLEMENTATION
 #define M_IMAGE_IMPLEMENTATION
 #define M_DIST_IMPLEMENTATION
@@ -118,22 +106,25 @@ int            ctoy__argc = 0;
 
 
 /* input */
-#define        CTOY_MOUSE_BUTTON_COUNT (GLFW_MOUSE_BUTTON_LAST+1)
-#define        CTOY_KEY_COUNT (GLFW_KEY_LAST+1)
-#define        CTOY_JOY_COUNT (GLFW_JOYSTICK_LAST+1)
-#define        CTOY_JOY_AXIS_MAX 32
-#define        CTOY_JOY_BUTTON_MAX 32
-char           ctoy__button[CTOY_KEY_COUNT][2];
-char           ctoy__mouse_button[CTOY_MOUSE_BUTTON_COUNT][2];
-char           ctoy__joystick_button[CTOY_JOY_COUNT][CTOY_JOY_BUTTON_MAX][2];
-float          ctoy__joystick_axis[CTOY_JOY_COUNT][CTOY_JOY_AXIS_MAX];
-char           ctoy__joystick_button_count[CTOY_JOY_COUNT];
-char           ctoy__joystick_axis_count[CTOY_JOY_COUNT];
-unsigned int   ctoy__char_queue[CTOY_CHAR_MAX];
-int            ctoy__char_count = 0;
-float          ctoy__mouse_x = 0;
-float          ctoy__mouse_y = 0;
-float          ctoy__tablet_pressure = 0;
+#define              CTOY_MOUSE_BUTTON_COUNT (GLFW_MOUSE_BUTTON_LAST+1)
+#define              CTOY_KEY_COUNT (GLFW_KEY_LAST+1)
+#define              CTOY_JOY_COUNT (GLFW_JOYSTICK_LAST+1)
+#define              CTOY_JOY_AXIS_MAX 32
+#define              CTOY_JOY_BUTTON_MAX 32
+char                 ctoy__button[CTOY_KEY_COUNT][2];
+char                 ctoy__mouse_button[CTOY_MOUSE_BUTTON_COUNT][2];
+char                 ctoy__joystick_button[CTOY_JOY_COUNT][CTOY_JOY_BUTTON_MAX][2];
+float                ctoy__joystick_axis[CTOY_JOY_COUNT][CTOY_JOY_AXIS_MAX];
+char                 ctoy__joystick_button_count[CTOY_JOY_COUNT];
+char                 ctoy__joystick_axis_count[CTOY_JOY_COUNT];
+unsigned int         ctoy__char_queue[CTOY_CHAR_MAX];
+struct ctoy_pen_data ctoy__pen_data_queue[CTOY_PEN_DATA_MAX];
+int                  ctoy__char_count = 0;
+int                  ctoy__pen_data_count = 0;
+float                ctoy__mouse_x = 0;
+float                ctoy__mouse_y = 0;
+float                ctoy__scroll_x = 0;
+float                ctoy__scroll_y = 0;
 
 /* sound */
 ALCdevice *    ctoy__oal_device = NULL;
@@ -166,6 +157,11 @@ static GLuint ctoy__frag_shader;
 static GLuint ctoy__prog_object;
 
 
+GLFWwindow * ctoy__get_glfw_window(void)
+{
+   return ctoy__window;
+}
+
 static void ctoy__close_callback(GLFWwindow * window)
 {
    ctoy__state = 0;
@@ -181,6 +177,12 @@ static void ctoy__cursorpos_callback(GLFWwindow * window, double x, double y)
 {
    ctoy__mouse_x = (float)x / (float)ctoy__win_width;
    ctoy__mouse_y = (float)y / (float)ctoy__win_height;
+}
+
+void ctoy__scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+   ctoy__scroll_x += (float)xoffset / (float)ctoy__win_width;
+   ctoy__scroll_y += (float)yoffset / (float)ctoy__win_height;
 }
 
 static void ctoy__key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -205,6 +207,32 @@ static void ctoy__char_callback(GLFWwindow * window, unsigned int key)
       ctoy__char_queue[ctoy__char_count] = key;
       ctoy__char_count++;
    }
+}
+
+static void ctoy__penTabletData_callback(double x, double y, double z, double pressure, double pitch, double yaw, double roll)
+{
+   int xpos, ypos;
+   glfwGetWindowPos(ctoy__window, &xpos, &ypos);
+
+   if (ctoy__pen_data_count < CTOY_PEN_DATA_MAX) {
+      struct ctoy_pen_data pd = {
+         (x - xpos) / ctoy__win_width,
+         (y - ypos) / ctoy__win_height,
+         z, pressure, pitch, yaw, roll};
+      ctoy__pen_data_queue[ctoy__pen_data_count] = pd;
+      ctoy__pen_data_count++;
+   }
+   else {
+      assert(0);
+   }
+}
+
+static void ctoy__penTabletCursor_callback(unsigned int cursor)
+{
+}
+
+static void ctoy__penTabletProximity_callback(int proximity)
+{
 }
 
 static GLuint ctoy__shader(GLenum type, const char *src)
@@ -283,7 +311,7 @@ static int ctoy__window_init(const char *title, int fullscreen)
    
    if (ctoy__window)
       glfwDestroyWindow(ctoy__window);
-      
+
    ctoy__window = win;
    sprintf(ctoy__title, "%s", title);
    
@@ -293,21 +321,12 @@ static int ctoy__window_init(const char *title, int fullscreen)
    glfwSetMouseButtonCallback(ctoy__window, ctoy__mousebutton_callback);
    glfwSetCharCallback(ctoy__window, ctoy__char_callback);
    glfwSetCursorPosCallback(ctoy__window, ctoy__cursorpos_callback);
+   glfwSetScrollCallback(ctoy__window, ctoy__scroll_callback);
+   glfwSetPenTabletDataCallback(ctoy__penTabletData_callback);
+   glfwSetPenTabletCursorCallback(ctoy__penTabletCursor_callback);
+   glfwSetPenTabletProximityCallback(ctoy__penTabletProximity_callback);
    glfwMakeContextCurrent(ctoy__window);
    glfwSwapInterval(1);
-
-#ifdef WIN32
-   {
-	   HWND w32window = glfwGetWin32Window(ctoy__window);
-	   EasyTab_Load(w32window);
-   }
-#elif defined(__linux__)
-   {
-      Window xwindow = glfwGetX11Window(ctoy__window);
-      Display *xdisplay = glfwGetX11Display();
-      EasyTab_Load(xdisplay, xwindow);
-   }
-#endif
 
 #ifndef GLFW_INCLUDE_ES2
    if (gladLoadGL() == 0)
@@ -440,28 +459,10 @@ static void ctoy__update(void)
    for (i = 0; i < CTOY_MOUSE_BUTTON_COUNT; i++)
       ctoy__mouse_button[i][0] = 0; 
    ctoy__char_count = 0;
+   ctoy__pen_data_count = 0;
 
-   /* tablet events */
-#ifdef WIN32
-   {
-       HWND w32window = glfwGetWin32Window(ctoy__window); MSG msg;
-	   if (PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	       if (EasyTab_HandleEvent(msg.hwnd, msg.message, msg.lParam, msg.wParam) == EASYTAB_OK)
-			   ctoy__tablet_pressure = EasyTab->Pressure;
-	   }
-   }
-#elif defined(__linux__)
-   {
-      Display *xdisplay = glfwGetX11Display();
-      int count = XPending(xdisplay);
-      while (count--) {
-         XEvent event;
-         XPeekEvent(xdisplay, &event);
-         if (EasyTab_HandleEvent(&event) == EASYTAB_OK)
-         	ctoy__tablet_pressure = EasyTab->Pressure;
-      }
-   }
-#endif
+   ctoy__scroll_x = 0;
+   ctoy__scroll_y = 0;
 
    glfwPollEvents();
 
@@ -507,6 +508,13 @@ int ctoy_get_chars(unsigned int dest[CTOY_CHAR_MAX])
    if (ctoy__char_count > 0)
       memcpy(dest, ctoy__char_queue, ctoy__char_count * sizeof(int));
    return ctoy__char_count;
+}
+
+int ctoy_get_pen_data(struct ctoy_pen_data dest[CTOY_PEN_DATA_MAX])
+{
+   if (ctoy__pen_data_count > 0)
+      memcpy(dest, ctoy__pen_data_queue, ctoy__pen_data_count * sizeof(struct ctoy_pen_data));
+   return ctoy__pen_data_count;
 }
 
 int ctoy_key_press(int key)
@@ -574,28 +582,29 @@ float ctoy_joystick_axis(int joy, int axis)
    return ctoy__joystick_axis[joy][axis];
 }
 
-void ctoy_swap_buffer(struct m_image *image)
+void ctoy_render_image(struct m_image *image)
 {
-   if (image) {
-      
-      if (image->width != ctoy__tex_width || image->height != ctoy__tex_height)
-         ctoy__setup_texture(image->width, image->height);
+   if (image->width != ctoy__tex_width || image->height != ctoy__tex_height)
+      ctoy__setup_texture(image->width, image->height);
 
-      glBindTexture(GL_TEXTURE_2D, ctoy__texture);
+   glBindTexture(GL_TEXTURE_2D, ctoy__texture);
 
-      if (image->type == M_FLOAT) {
-         m_image_float_to_srgb(&ctoy__buffer_ubyte, image);
-         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ctoy__buffer_ubyte.width, ctoy__buffer_ubyte.height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, ctoy__buffer_ubyte.data);
-      }
-      else if (image->type == M_UBYTE) {
-         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, image->data);
-      }
-   
-      glScissor(0, 0, ctoy__win_width, ctoy__win_height);
-      glViewport(0, 0, ctoy__win_width, ctoy__win_height);
-      ctoy__draw_texture(ctoy__texture);
+   if (image->type == M_FLOAT) {
+      m_image_float_to_srgb(&ctoy__buffer_ubyte, image);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ctoy__buffer_ubyte.width, ctoy__buffer_ubyte.height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, ctoy__buffer_ubyte.data);
+   }
+   else if (image->type == M_UBYTE) {
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width, image->height, image->comp == 3 ? GL_RGB : GL_LUMINANCE, GL_UNSIGNED_BYTE, image->data);
    }
    
+   glScissor(0, 0, ctoy__win_width, ctoy__win_height);
+   glViewport(0, 0, ctoy__win_width, ctoy__win_height);
+   ctoy__draw_texture(ctoy__texture);
+}
+
+void ctoy_swap_buffer(struct m_image *image)
+{
+   if (image) ctoy_render_image(image);
    glfwSwapBuffers(ctoy__window);
 }
 
@@ -677,9 +686,14 @@ float ctoy_mouse_y(void)
    return ctoy__mouse_y;
 }
 
-float ctoy_tablet_pressure(void)
+float ctoy_scroll_x(void)
 {
-   return ctoy__tablet_pressure;
+   return ctoy__scroll_x;
+}
+
+float ctoy_scroll_y(void)
+{
+   return ctoy__scroll_y;
 }
 
 void ctoy_register_memory(void *memory)

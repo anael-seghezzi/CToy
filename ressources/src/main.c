@@ -20,4 +20,8 @@
 
 #elif CTOY_SAMPLE == 6
 #include "sample/voronoi.c"
+
+#elif CTOY_SAMPLE == 7
+#include "sample/imgui_hello.c"
+
 #endif

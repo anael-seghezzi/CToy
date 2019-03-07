@@ -11,8 +11,8 @@ application development.  It provides a simple, platform-independent API for
 creating windows, contexts and surfaces, reading input, handling events, etc.
 
 GLFW natively supports Windows, macOS and Linux and other Unix-like systems.
-Experimental implementations for the Wayland protocol and the Mir display server
-are available but not yet officially supported.                             
+An experimental implementation for the Wayland protocol is available but not
+yet officially supported.
 
 GLFW is licensed under the [zlib/libpng
 license](http://www.glfw.org/license.html).
@@ -69,13 +69,13 @@ and the API reference.
 ## Contributing to GLFW
 
 See the [contribution
-guide](https://github.com/glfw/glfw/blob/master/.github/CONTRIBUTING.md) for
+guide](https://github.com/glfw/glfw/blob/master/docs/CONTRIBUTING.md) for
 more information.
 
 
 ## System requirements
 
-GLFW supports Windows XP and later and macOS 10.7 and later.  Linux and other
+GLFW supports Windows XP and later and macOS 10.8 and later.  Linux and other
 Unix-like systems running the X Window System are supported even without
 a desktop environment or modern extensions, although some features require
 a running window or clipboard manager.  The OSMesa backend requires Mesa 6.3.
@@ -106,9 +106,9 @@ located in the `deps/` directory.
  - [stb\_image\_write](https://github.com/nothings/stb) for writing images to disk
  - [Vulkan headers](https://www.khronos.org/registry/vulkan/) for Vulkan tests
 
-The Vulkan example additionally requires the Vulkan SDK to be installed, or it
-will not be included in the build.  On macOS you need to provide the path to the
-MoltenVK SDK manually as it has no standard installation location.
+The Vulkan example additionally requires the LunarG Vulkan SDK to be installed,
+or it will not be included in the build.  On macOS you need to provide the path
+to the SDK manually as it has no standard installation location.
 
 The documentation is generated with [Doxygen](http://doxygen.org/) if CMake can
 find that tool.
@@ -118,7 +118,7 @@ find that tool.
 
 Bugs are reported to our [issue tracker](https://github.com/glfw/glfw/issues).
 Please check the [contribution
-guide](https://github.com/glfw/glfw/blob/master/.github/CONTRIBUTING.md) for
+guide](https://github.com/glfw/glfw/blob/master/docs/CONTRIBUTING.md) for
 information on what to include when reporting a bug.
 
 
@@ -136,6 +136,9 @@ information on what to include when reporting a bug.
   gamepad mapping (#900)
 - Added `glfwGetGamepadState` function, `GLFW_GAMEPAD_*` and `GLFWgamepadstate`
   for retrieving gamepad input state (#900)
+- Added `glfwGetWindowContentScale`, `glfwGetMonitorContentScale` and
+  `glfwSetWindowContentScaleCallback` for DPI-aware rendering
+  (#235,#439,#677,#845,#898)
 - Added `glfwRequestWindowAttention` function for requesting attention from the
   user (#732,#988)
 - Added `glfwGetKeyScancode` function that allows retrieving platform dependent
@@ -145,30 +148,53 @@ information on what to include when reporting a bug.
 - Added `glfwSetWindowAttrib` function for changing window attributes (#537)
 - Added `glfwGetJoystickHats` function for querying joystick hats
   (#889,#906,#934)
-- Added `glfwInitHint` and `glfwInitHintString` for setting initialization hints
+- Added `glfwInitHint` for setting initialization hints
+- Added `glfwWindowHintString` for setting string type window hints (#893,#1139)
+- Added `glfwGetWindowOpacity` and `glfwSetWindowOpacity` for controlling whole
+  window transparency (#1089)
+- Added `glfwSetMonitorUserPointer` and `glfwGetMonitorUserPointer` for
+  per-monitor user pointers
+- Added `glfwSetJoystickUserPointer` and `glfwGetJoystickUserPointer` for
+  per-joystick user pointers
 - Added `glfwGetX11SelectionString` and `glfwSetX11SelectionString`
   functions for accessing X11 primary selection (#894,#1056)
+- Added `glfwRawMouseMotionSupported` function for querying raw motion support
+  (#125,#1400,#1401)
 - Added headless [OSMesa](http://mesa3d.org/osmesa.html) backend (#850)
 - Added definition of `GLAPIENTRY` to public header
-- Added `GLFW_TRANSPARENT` window hint for enabling window framebuffer
-  transparency (#197,#663,#715,#723,#1078)
+- Added `GLFW_TRANSPARENT_FRAMEBUFFER` window hint and attribute for controlling
+  per-pixel framebuffer transparency (#197,#663,#715,#723,#1078)
+- Added `GLFW_HOVERED` window attribute for polling cursor hover state (#1166)
 - Added `GLFW_CENTER_CURSOR` window hint for controlling cursor centering
   (#749,#842)
+- Added `GLFW_FOCUS_ON_SHOW` window hint and attribute to control input focus
+  on calling show window (#1189)
+- Added `GLFW_SCALE_TO_MONITOR` window hint for automatic window resizing
+  (#676,#1115)
 - Added `GLFW_JOYSTICK_HAT_BUTTONS` init hint (#889)
+- Added `GLFW_LOCK_KEY_MODS` input mode and `GLFW_MOD_*_LOCK` mod bits (#946)
+- Added `GLFW_RAW_MOUSE_MOTION` input mode for selecting raw motion input
+  (#125,#1400,#1401)
 - Added macOS specific `GLFW_COCOA_RETINA_FRAMEBUFFER` window hint
-- Added macOS specific `GLFW_COCOA_FRAME_AUTOSAVE` window hint (#195)
+- Added macOS specific `GLFW_COCOA_FRAME_NAME` window hint (#195)
 - Added macOS specific `GLFW_COCOA_GRAPHICS_SWITCHING` window hint (#377,#935)
 - Added macOS specific `GLFW_COCOA_CHDIR_RESOURCES` init hint
 - Added macOS specific `GLFW_COCOA_MENUBAR` init hint
-- Added X11 specific `GLFW_X11_WM_CLASS_NAME` and `GLFW_X11_WM_CLASS_CLASS` init
-  hints (#893)
+- Added X11 specific `GLFW_X11_CLASS_NAME` and `GLFW_X11_INSTANCE_NAME` window
+  hints (#893,#1139)
 - Added `GLFW_INCLUDE_ES32` for including the OpenGL ES 3.2 header
 - Added `GLFW_OSMESA_CONTEXT_API` for creating OpenGL contexts with
   [OSMesa](https://www.mesa3d.org/osmesa.html) (#281)
 - Added `GenerateMappings.cmake` script for updating gamepad mappings
+- Made `glfwCreateWindowSurface` emit an error when the window has a context
+  (#1194,#1205)
+- Deprecated window parameter of clipboard string functions
+- Deprecated charmods callback
 - Removed `GLFW_USE_RETINA` compile-time option
 - Removed `GLFW_USE_CHDIR` compile-time option
 - Removed `GLFW_USE_MENUBAR` compile-time option
+- Removed requirement of at least one window for `glfwWaitEvents` and
+  `glfwPostEmptyEvent` (#1317)
 - Bugfix: Calling `glfwMaximizeWindow` on a full screen window was not ignored
 - Bugfix: `GLFW_INCLUDE_VULKAN` could not be combined with the corresponding
           OpenGL and OpenGL ES header macros
@@ -177,8 +203,9 @@ information on what to include when reporting a bug.
 - Bugfix: Invalid library paths were used in test and example CMake files (#930)
 - Bugfix: The scancode for synthetic key release events was always zero
 - Bugfix: The generated Doxyfile did not handle paths with spaces (#1081)
+- Bugfix: The gamma ramp generated by `glfwSetGamma` did not use the monitor
+          ramp size (#1387,#1388)
 - [Win32] Added system error strings to relevant GLFW error descriptions (#733)
-- [Win32] Moved to `WM_INPUT` for disabled cursor mode motion input (#125)
 - [Win32] Removed XInput circular deadzone from joystick axis data (#1045)
 - [Win32] Bugfix: Undecorated windows could not be iconified by the user (#861)
 - [Win32] Bugfix: Deadzone logic could underflow with some controllers (#910)
@@ -198,7 +225,16 @@ information on what to include when reporting a bug.
 - [Win32] Bugfix: Disabled cursor mode prevented use of caption buttons
                   (#650,#1071)
 - [Win32] Bugfix: Returned key names did not match other platforms (#943)
-- [X11] Moved to XI2 `XI_RawMotion` for disable cursor mode motion input (#125)
+- [Win32] Bugfix: Undecorated windows did not maximize to workarea (#899)
+- [Win32] Bugfix: Window was resized twice when entering full screen (#1085)
+- [Win32] Bugfix: The HID device notification was not unregistered (#1170)
+- [Win32] Bugfix: `glfwCreateWindow` activated window even with `GLFW_FOCUSED`
+                  hint set to false (#1179,#1180)
+- [Win32] Bugfix: The keypad equals key was reported as `GLFW_KEY_UNKNOWN`
+                  (#1315,#1316)
+- [Win32] Bugfix: A title bar would be drawn over undecorated windows in some
+                  circumstances (#1383)
+- [Win32] Bugfix: Standard cursors were not per-monitor DPI aware (#1431)
 - [X11] Replaced `_GLFW_HAS_XF86VM` compile-time option with dynamic loading
 - [X11] Bugfix: `glfwGetVideoMode` would segfault on Cygwin/X
 - [X11] Bugfix: Dynamic X11 library loading did not use full sonames (#941)
@@ -211,6 +247,16 @@ information on what to include when reporting a bug.
 - [X11] Bugfix: Incremental reading of selections was not supported (#275)
 - [X11] Bugfix: Selection I/O reported but did not support `COMPOUND_TEXT`
 - [X11] Bugfix: Latin-1 text read from selections was not converted to UTF-8
+- [X11] Bugfix: NVidia EGL would segfault if unloaded before closing the display
+- [X11] Bugfix: Checking window maximized attrib could crash some WMs (#1356)
+- [X11] Bugfix: Update cursor position on enter event (#1366)
+- [X11] Bugfix: `glfwSetWindowMonitor` did not update hints when resizing
+                non-user-resizable windows
+- [X11] Bugfix: `glfwSetWindowMonitor` did not flush output buffer in some cases
+- [X11] Bugfix: `glfwSetWindowMonitor` did not update the EWMH state of hidden
+                windows (#1358)
+- [Linux] Added workaround for missing `SYN_DROPPED` in pre-2.6.39 kernel
+          headers (#1196)
 - [Linux] Moved to evdev for joystick input (#906,#1005)
 - [Linux] Bugfix: Event processing did not detect joystick disconnection (#932)
 - [Linux] Bugfix: The joystick device path could be truncated (#1025)
@@ -219,6 +265,7 @@ information on what to include when reporting a bug.
 - [Cocoa] Added support for Vulkan window surface creation via
           [MoltenVK](https://moltengl.com/moltenvk/) (#870)
 - [Cocoa] Added support for loading a `MainMenu.nib` when available
+- [Cocoa] Disabled automatic window tabbing for created windows (#1250)
 - [Cocoa] Bugfix: Disabling window aspect ratio would assert (#852)
 - [Cocoa] Bugfix: Window creation failed to set first responder (#876,#883)
 - [Cocoa] Bugfix: Removed use of deprecated `CGDisplayIOServicePort` function
@@ -238,6 +285,14 @@ information on what to include when reporting a bug.
                   notification was shown (#971,#1028)
 - [Cocoa] Bugfix: Some characters did not repeat due to Press and Hold (#1010)
 - [Cocoa] Bugfix: Window title was lost when full screen or undecorated (#1082)
+- [Cocoa] Bugfix: Window was resized twice when entering full screen (#1085)
+- [Cocoa] Bugfix: Duplicate size events were not filtered (#1085)
+- [Cocoa] Bugfix: Event polling did not initialize AppKit if necessary (#1218)
+- [Cocoa] Bugfix: OpenGL rendering was not initially visible on 10.14
+                  (#1334,#1346)
+- [Cocoa] Bugfix: Caps Lock did not generate any key events (#1368,#1373)
+- [Cocoa] Bugfix: Some buttons for some joysticks were ignored (#1385)
+- [Cocoa] Bugfix: Analog joystick buttons were not translated correctly (#1385)
 - [WGL] Added support for `WGL_EXT_colorspace` for OpenGL ES contexts
 - [WGL] Added support for `WGL_ARB_create_context_no_error`
 - [GLX] Added support for `GLX_ARB_create_context_no_error`
@@ -275,7 +330,9 @@ skills.
  - David Avedissian
  - Keith Bauer
  - John Bartholomew
+ - Coşku Baş
  - Niklas Behrens
+ - Andrew Belt
  - Niklas Bergström
  - Denis Bernard
  - Doug Binks
@@ -313,6 +370,8 @@ skills.
  - Mário Freitas
  - GeO4d
  - Marcus Geelnard
+ - Stephen Gowen
+ - Kovid Goyal
  - Eloi Marín Gratacós
  - Stefan Gustavson
  - Jonathan Hale
@@ -340,6 +399,7 @@ skills.
  - Glenn Lewis
  - Shane Liesegang
  - Eyal Lotem
+ - Aaron Loucks
  - Tristam MacDonald
  - Hans Mackowiak
  - Дмитри Малышев
@@ -356,6 +416,7 @@ skills.
  - Bruce Mitchener
  - Jack Moffitt
  - Jeff Molofee
+ - Alexander Monakov
  - Pierre Morel
  - Jon Morton
  - Pierre Moulon
@@ -377,9 +438,12 @@ skills.
  - Cyril Pichard
  - Keith Pitt
  - Stanislav Podgorskiy
+ - Nathan Poirier
  - Alexandre Pretyman
+ - przemekmirek
  - Philip Rideout
  - Eddie Ringle
+ - Max Risuhin
  - Jorge Rodriguez
  - Ed Ropple
  - Aleksey Rybalkin
@@ -417,6 +481,7 @@ skills.
  - Ricardo Vieira
  - Nicholas Vitovitch
  - Simon Voordouw
+ - Corentin Wallez
  - Torsten Walluhn
  - Patrick Walton
  - Xo Wang

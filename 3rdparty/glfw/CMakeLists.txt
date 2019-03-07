@@ -1,16 +1,10 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 
 project(GLFW C)
 
 set(CMAKE_LEGACY_CYGWIN_WIN32 OFF)
 
-if (NOT CMAKE_VERSION VERSION_LESS "3.0")
-    # Until all major package systems have moved to CMake 3,
-    # we stick with the older INSTALL_NAME_DIR mechanism
-    cmake_policy(SET CMP0042 OLD)
-endif()
-
-if (NOT CMAKE_VERSION VERSION_LESS "3.1")
+if (POLICY CMP0054)
     cmake_policy(SET CMP0054 NEW)
 endif()
 
@@ -20,7 +14,6 @@ set(GLFW_VERSION_PATCH "0")
 set(GLFW_VERSION_EXTRA "")
 set(GLFW_VERSION "${GLFW_VERSION_MAJOR}.${GLFW_VERSION_MINOR}")
 set(GLFW_VERSION_FULL "${GLFW_VERSION}.${GLFW_VERSION_PATCH}${GLFW_VERSION_EXTRA}")
-set(LIB_SUFFIX "" CACHE STRING "Takes an empty string or 64. Directory where lib will be installed: lib or lib64")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -30,7 +23,8 @@ option(GLFW_BUILD_TESTS "Build the GLFW test programs" ON)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" ON)
 option(GLFW_INSTALL "Generate installation target" ON)
 option(GLFW_VULKAN_STATIC "Use the Vulkan loader statically linked into application" OFF)
-option(GLFW_DOCUMENT_INTERNALS "Include internals in documentation" OFF)
+
+include(GNUInstallDirs)
 
 if (UNIX)
     option(GLFW_USE_OSMESA "Use OSMesa for offscreen context creation" OFF)
@@ -42,7 +36,6 @@ endif()
 
 if (UNIX AND NOT APPLE)
     option(GLFW_USE_WAYLAND "Use Wayland for window creation" OFF)
-    option(GLFW_USE_MIR     "Use Mir for window creation" OFF)
 endif()
 
 if (MSVC)
@@ -142,24 +135,12 @@ if (MINGW)
     endif()
 endif()
 
-if (APPLE)
-    # Dependencies required by the MoltenVK static library
-    set(GLFW_VULKAN_DEPS
-        "-lc++"
-        "-framework Cocoa"
-        "-framework Metal"
-        "-framework QuartzCore")
-endif()
-
 #--------------------------------------------------------------------
 # Detect and select backend APIs
 #--------------------------------------------------------------------
 if (GLFW_USE_WAYLAND)
     set(_GLFW_WAYLAND 1)
     message(STATUS "Using Wayland for window creation")
-elseif (GLFW_USE_MIR)
-    set(_GLFW_MIR 1)
-    message(STATUS "Using Mir for window creation")
 elseif (GLFW_USE_OSMESA)
     set(_GLFW_OSMESA 1)
     message(STATUS "Using OSMesa for headless context creation")
@@ -181,7 +162,7 @@ endif()
 #--------------------------------------------------------------------
 if (GLFW_VULKAN_STATIC)
     if (VULKAN_FOUND AND VULKAN_STATIC_LIBRARY)
-        list(APPEND glfw_LIBRARIES "${VULKAN_STATIC_LIBRARY}" ${GLFW_VULKAN_DEPS})
+        list(APPEND glfw_LIBRARIES "${VULKAN_STATIC_LIBRARY}")
         if (BUILD_SHARED_LIBS)
             message(WARNING "Linking Vulkan loader static library into GLFW")
         endif()
@@ -276,35 +257,30 @@ if (_GLFW_WAYLAND)
     find_package(ECM REQUIRED NO_MODULE)
     list(APPEND CMAKE_MODULE_PATH "${ECM_MODULE_PATH}")
 
-    find_package(Wayland REQUIRED)
+    find_package(Wayland REQUIRED Client Cursor Egl)
     find_package(WaylandScanner REQUIRED)
-    find_package(WaylandProtocols 1.1 REQUIRED)
+    find_package(WaylandProtocols 1.15 REQUIRED)
 
     list(APPEND glfw_PKG_DEPS "wayland-egl")
 
-    list(APPEND glfw_INCLUDE_DIRS "${Wayland_INCLUDE_DIR}")
+    list(APPEND glfw_INCLUDE_DIRS "${Wayland_INCLUDE_DIRS}")
     list(APPEND glfw_LIBRARIES "${Wayland_LIBRARIES}" "${CMAKE_THREAD_LIBS_INIT}")
 
     find_package(XKBCommon REQUIRED)
-    list(APPEND glfw_PKG_DEPS "xkbcommon")
     list(APPEND glfw_INCLUDE_DIRS "${XKBCOMMON_INCLUDE_DIRS}")
-    list(APPEND glfw_LIBRARIES "${XKBCOMMON_LIBRARY}")
-endif()
 
-#--------------------------------------------------------------------
-# Use Mir for window creation
-#--------------------------------------------------------------------
-if (_GLFW_MIR)
-    find_package(Mir REQUIRED)
-    list(APPEND glfw_PKG_DEPS "mirclient")
+    include(CheckIncludeFiles)
+    include(CheckFunctionExists)
+    check_include_files(xkbcommon/xkbcommon-compose.h HAVE_XKBCOMMON_COMPOSE_H)
+    check_function_exists(memfd_create HAVE_MEMFD_CREATE)
 
-    list(APPEND glfw_INCLUDE_DIRS "${MIR_INCLUDE_DIRS}")
-    list(APPEND glfw_LIBRARIES "${MIR_LIBRARIES}" "${CMAKE_THREAD_LIBS_INIT}")
-
-    find_package(XKBCommon REQUIRED)
-    list(APPEND glfw_PKG_DEPS "xkbcommon")
-    list(APPEND glfw_INCLUDE_DIRS "${XKBCOMMON_INCLUDE_DIRS}")
-    list(APPEND glfw_LIBRARIES "${XKBCOMMON_LIBRARY}")
+    if (NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux"))
+        find_package(EpollShim)
+        if (EPOLLSHIM_FOUND)
+            list(APPEND glfw_INCLUDE_DIRS "${EPOLLSHIM_INCLUDE_DIRS}")
+            list(APPEND glfw_LIBRARIES "${EPOLLSHIM_LIBRARIES}")
+        endif()
+    endif()
 endif()
 
 #--------------------------------------------------------------------
@@ -345,7 +321,7 @@ endforeach()
 #--------------------------------------------------------------------
 include(CMakePackageConfigHelpers)
 
-set(GLFW_CONFIG_PATH "lib${LIB_SUFFIX}/cmake/glfw3")
+set(GLFW_CONFIG_PATH "${CMAKE_INSTALL_LIBDIR}/cmake/glfw3")
 
 configure_package_config_file(src/glfw3Config.cmake.in
                               src/glfw3Config.cmake
@@ -382,7 +358,7 @@ endif()
 # The library is installed by src/CMakeLists.txt
 #--------------------------------------------------------------------
 if (GLFW_INSTALL)
-    install(DIRECTORY include/GLFW DESTINATION include
+    install(DIRECTORY include/GLFW DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
             FILES_MATCHING PATTERN glfw3.h PATTERN glfw3native.h)
 
     install(FILES "${GLFW_BINARY_DIR}/src/glfw3Config.cmake"
@@ -393,7 +369,7 @@ if (GLFW_INSTALL)
             EXPORT_LINK_INTERFACE_LIBRARIES
             DESTINATION "${GLFW_CONFIG_PATH}")
     install(FILES "${GLFW_BINARY_DIR}/src/glfw3.pc"
-            DESTINATION "lib${LIB_SUFFIX}/pkgconfig")
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
     # Only generate this target if no higher-level project already has
     if (NOT TARGET uninstall)
@@ -403,6 +379,7 @@ if (GLFW_INSTALL)
         add_custom_target(uninstall
                           "${CMAKE_COMMAND}" -P
                           "${GLFW_BINARY_DIR}/cmake_uninstall.cmake")
+        set_target_properties(uninstall PROPERTIES FOLDER "GLFW3")
     endif()
 endif()
 

@@ -260,6 +260,8 @@ static void closeJoystick(_GLFWjoystick* js)
         IDirectInputDevice8_Release(js->win32.device);
     }
 
+    free(js->win32.objects);
+
     _glfwFreeJoystick(js);
     _glfwInputJoystick(js, GLFW_DISCONNECTED);
 }
@@ -711,9 +713,9 @@ int _glfwPlatformPollJoystick(_GLFWjoystick* js, int mode)
             return GLFW_TRUE;
 
         _glfwInputJoystickAxis(js, 0, (xis.Gamepad.sThumbLX + 0.5f) / 32767.5f);
-        _glfwInputJoystickAxis(js, 1, (xis.Gamepad.sThumbLY + 0.5f) / 32767.5f);
+        _glfwInputJoystickAxis(js, 1, -(xis.Gamepad.sThumbLY + 0.5f) / 32767.5f);
         _glfwInputJoystickAxis(js, 2, (xis.Gamepad.sThumbRX + 0.5f) / 32767.5f);
-        _glfwInputJoystickAxis(js, 3, (xis.Gamepad.sThumbRY + 0.5f) / 32767.5f);
+        _glfwInputJoystickAxis(js, 3, -(xis.Gamepad.sThumbRY + 0.5f) / 32767.5f);
         _glfwInputJoystickAxis(js, 4, xis.Gamepad.bLeftTrigger / 127.5f - 1.f);
         _glfwInputJoystickAxis(js, 5, xis.Gamepad.bRightTrigger / 127.5f - 1.f);
 
