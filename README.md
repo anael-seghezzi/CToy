@@ -59,7 +59,8 @@ void ctoy_end() // called at the end of the program
 ```
 Every time you modify src/main.c or any other file connected to it (directly or recursively included), C-Toy will recompile and restart the program dynamically.
 
-One other difference with standard C is the use of persistent memory to maintain a bloc of memory intact between recompiles. For example :
+One other difference with standard C is the use of persistent memory to maintain a bloc of memory intact between recompiles.
+For example:
 
 ```c
 #include <ctoy.h>
@@ -87,6 +88,7 @@ void ctoy_main_loop()
 void ctoy_end()
 {}
 ```
+(You can store any data that was manually allocated with malloc, it can be an array or a global pointer. Just avoid storing function pointers, as functions addresses may change after recompiles, or update them after calling ctoy_retrieve_memory.)
 
 Documentation
 -------------
