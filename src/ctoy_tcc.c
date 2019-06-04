@@ -312,6 +312,7 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_image_copy", m_image_copy);
    tcc_add_symbol(ctoy__tcc, "m_image_copy_sub_image", m_image_copy_sub_image);
    tcc_add_symbol(ctoy__tcc, "m_image_reframe", m_image_reframe);
+   tcc_add_symbol(ctoy__tcc, "m_image_reframe_zero", m_image_reframe_zero);
    tcc_add_symbol(ctoy__tcc, "m_image_extract_component", m_image_extract_component);
    tcc_add_symbol(ctoy__tcc, "m_image_rotate_left", m_image_rotate_left);
    tcc_add_symbol(ctoy__tcc, "m_image_rotate_right", m_image_rotate_right);
