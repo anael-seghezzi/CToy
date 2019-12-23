@@ -20,25 +20,25 @@ struct stat {
 
 #elif defined(__linux__)
 struct stat {
-	dev_t	st_dev;
-	ino_t	st_ino;
-	mode_t	st_mode;
-	nlink_t	st_nlink;
-	uid_t	st_uid;
-	gid_t	st_gid;
-	dev_t	st_rdev;
-	off_t	st_size;
-	time_t	st_atime;
+	uint32_t	st_dev;
+	uint32_t	st_ino;
+	uint16_t	st_mode;
+	uint32_t	st_nlink;
+	uint32_t	st_uid;
+	uint32_t	st_gid;
+	uint32_t	st_rdev;
+	int64_t	st_size;
+	int64_t	st_atime;
 	long	st_spare1; /* not cross platform */
-	time_t	st_mtime;
+	int64_t	st_mtime;
 	long	st_spare2; /* not cross platform */
-	time_t	st_ctime;
+	int64_t	st_ctime;
 /* following not cross platform */
 	long	st_spare3;
 	long	st_blksize;
 	long	st_blocks;
-	u_long	st_flags;
-	u_long	st_gen;
+	unsigned long	st_flags;
+	unsigned long	st_gen;
 };
 
 #else

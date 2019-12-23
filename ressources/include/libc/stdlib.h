@@ -28,6 +28,8 @@ long long strtoll(const char *str, char **endPtr, int base);
 long long strtoull(const char *str, char **endPtr, int base);
 #endif
 
+double strtod(const char *str, char **endPtr); 
+
 void exit(int);
 
 #endif
