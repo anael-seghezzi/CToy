@@ -62,6 +62,8 @@ void ctoy_window_title(const char *title); // set window's title
 void ctoy_window_fullscreen(int state); // set window's fullscreen mode
 
 /* frame buffer */
+int ctoy_frame_buffer_width(void); // return frame buffer width (use that for glViewport)
+int ctoy_frame_buffer_height(void); // return frame buffer height (use that for glViewport)
 void ctoy_render_image(struct m_image *src); // render an image to the frame buffer
 void ctoy_swap_buffer(struct m_image *src); // swap current buffer with optional image (use NULL for GLES swap)
 

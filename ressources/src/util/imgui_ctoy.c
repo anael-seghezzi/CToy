@@ -60,6 +60,8 @@ void ImGui_ImplCToy_NewFrame()
 	// system
 	io->DisplaySize.x = ctoy_window_width();
     io->DisplaySize.y = ctoy_window_height();
+    io->DisplayFramebufferScale.x = (float)ctoy_frame_buffer_width() / ctoy_window_width();
+    io->DisplayFramebufferScale.y = (float)ctoy_frame_buffer_height() / ctoy_window_height();
     io->DeltaTime = time > 0.0 ? (float)(current_time - time) : (float)(1.0f/60.0f);
     time = current_time;
 
