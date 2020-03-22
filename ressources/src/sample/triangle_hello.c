@@ -67,7 +67,7 @@ void ctoy_end(void)
 
 void ctoy_main_loop()
 {
-   glViewport(0, 0, ctoy_window_width(), ctoy_window_height());
+   glViewport(0, 0, ctoy_frame_buffer_width(), ctoy_frame_buffer_height());
 
    glClearColor(0, 0.2, 0, 0);
    glClear(GL_COLOR_BUFFER_BIT);

@@ -206,6 +206,8 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_t", ctoy_t);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_width", ctoy_window_width);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_height", ctoy_window_height);
+   tcc_add_symbol(ctoy__tcc, "ctoy_frame_buffer_width", ctoy_frame_buffer_width);
+   tcc_add_symbol(ctoy__tcc, "ctoy_frame_buffer_height", ctoy_frame_buffer_height);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_x", ctoy_mouse_x);
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_y", ctoy_mouse_y);
    tcc_add_symbol(ctoy__tcc, "ctoy_scroll_x", ctoy_scroll_x);
