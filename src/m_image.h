@@ -236,10 +236,10 @@ MIAPI void m_linear_to_sRGB(float *dest, const float *src, int size)
 {
    int i;
    for (i = 0; i < size; i++) {
-      if (*src < 0.0031308)
-         *dest = 12.92 * (*src);
+      if (*src < 0.0031308f)
+         *dest = 12.92f * (*src);
       else
-         *dest = (1.0 + 0.055) * powf(*src, 1.0/2.4) - 0.055;
+         *dest = (1.0f + 0.055f) * powf(*src, 1.0f/2.4f) - 0.055f;
       dest++;
       src++;
    }
@@ -249,10 +249,10 @@ MIAPI void m_sRGB_to_linear(float *dest, const float *src, int size)
 {
    int i;
    for (i = 0; i < size; i++) {
-      if (*src <= 0.03928)
-         *dest = *src / 12.92;
+      if (*src <= 0.03928f)
+         *dest = *src / 12.92f;
       else
-         *dest = powf((*src + 0.055) / 1.055, 2.4);
+         *dest = powf((*src + 0.055f) / 1.055f, 2.4f);
       dest++;
       src++;
    }
@@ -565,7 +565,7 @@ MIAPI void m_normalize(float *dest, const float *src, int size)
       for(i = 0; i < size; i++)
          dest[i] = src[i] * sum;
    }
-   else {
+   else if (dest != src) {
       memset(dest, 0, size * sizeof(float));
    }
 }
@@ -591,7 +591,7 @@ MIAPI float m_mean(const float *src, int size)
    float mean = 0; int i;
    for (i = 0; i < size; i++)
       mean += (*src++);
-   return size > 0 ? mean / (float)size : 0;
+   return mean / size;
 }
 
 MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
@@ -1156,7 +1156,7 @@ MIAPI void m_image_create(struct m_image *image, char type, int width, int heigh
 
    image->data = malloc(size * m_type_sizeof(type));
    if( !image->data ) 
-		printf("BAD ALLOC:m_image_create\n");
+      printf("BAD ALLOC:m_image_create\n");
    image->type = type;
    image->width = width;
    image->height = height;
@@ -1211,39 +1211,47 @@ MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *sr
       }\
    }
 
-   int comp = src->comp;
-   int minx = M_MAX(0, x);
-   int miny = M_MAX(0, y);
-   int maxx = M_CLAMP(x + w - 1, 0, src->width - 1);
-   int maxy = M_CLAMP(y + h - 1, 0, src->height - 1);
-   int dwidth = 1 + maxx - minx;
-   int dheight = 1 + maxy - miny;
-   int sstep = src->width * comp;
-   int dstep = dwidth * comp;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_copy_sub_image(dest, &tmp, x, y, w, h);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int comp = src->comp;
+      int minx = M_MAX(0, x);
+      int miny = M_MAX(0, y);
+      int maxx = M_CLAMP(x + w - 1, 0, src->width - 1);
+      int maxy = M_CLAMP(y + h - 1, 0, src->height - 1);
+      int dwidth = 1 + maxx - minx;
+      int dheight = 1 + maxy - miny;
+      int sstep = src->width * comp;
+      int dstep = dwidth * comp;
 
-   m_image_create(dest, src->type, dwidth, dheight, src->comp);
-   
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_COPY_SUBI(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_COPY_SUBI(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_COPY_SUBI(uint32_t);
-      break;
-   case M_FLOAT:
-      M_COPY_SUBI(float);
-      break;
-   default:
-      assert(0);
-      break;
+      m_image_create(dest, src->type, dwidth, dheight, src->comp);
+      
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_COPY_SUBI(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_COPY_SUBI(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_COPY_SUBI(uint32_t);
+         break;
+      case M_FLOAT:
+         M_COPY_SUBI(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_COPY_SUBI
@@ -1251,92 +1259,140 @@ MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *sr
 
 MIAPI void m_image_ubyte_to_float(struct m_image *dest, const struct m_image *src)
 {
-   uint8_t *src_data;
-   float *dest_data;
-   float ubyte_div = 1.0f / 255.0f;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_ubyte_to_float(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      uint8_t *src_data;
+      float *dest_data;
+      float ubyte_div = 1.0f / 255.0f;
+      int i;
 
-   m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
+      m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
 
-   src_data = (uint8_t *)src->data;
-   dest_data = (float *)dest->data;
-   for (i = 0; i < src->size; i++)
-      dest_data[i] = (float)src_data[i] * ubyte_div;
+      src_data = (uint8_t *)src->data;
+      dest_data = (float *)dest->data;
+      for (i = 0; i < src->size; i++)
+         dest_data[i] = (float)src_data[i] * ubyte_div;
+   }
 }
 
 MIAPI void m_image_ushort_to_float(struct m_image *dest, const struct m_image *src)
 {
-   uint16_t *src_data;
-   float *dest_data;
-   float ushort_div = 1.0f / (float)65535;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_ushort_to_float(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      uint16_t *src_data;
+      float *dest_data;
+      float ushort_div = 1.0f / (float)65535;
+      int i;
 
-   m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
+      m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
 
-   src_data = (uint16_t *)src->data;
-   dest_data = (float *)dest->data;
-   for (i = 0; i < src->size; i++)
-      dest_data[i] = (float)src_data[i] * ushort_div;
+      src_data = (uint16_t *)src->data;
+      dest_data = (float *)dest->data;
+      for (i = 0; i < src->size; i++)
+         dest_data[i] = (float)src_data[i] * ushort_div;
+   }
 }
 
 MIAPI void m_image_half_to_float(struct m_image *dest, const struct m_image *src)
 {
-   uint16_t *src_data;
-   float *dest_data;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_half_to_float(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      uint16_t *src_data;
+      float *dest_data;
+      int i;
 
-   m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
+      m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
 
-   src_data = (uint16_t *)src->data;
-   dest_data = (float *)dest->data;
-   for (i = 0; i < src->size; i++)
-      dest_data[i] = m_half2float(src_data[i]);
+      src_data = (uint16_t *)src->data;
+      dest_data = (float *)dest->data;
+      for (i = 0; i < src->size; i++)
+         dest_data[i] = m_half2float(src_data[i]);
+   }
 }
 
 MIAPI void m_image_float_to_ubyte(struct m_image *dest, const struct m_image *src)
 {
-   float *src_data;
-   uint8_t *dest_data;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_float_to_ubyte(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_data;
+      uint8_t *dest_data;
+      int i;
 
-   m_image_create(dest, M_UBYTE, src->width, src->height, src->comp);
+      m_image_create(dest, M_UBYTE, src->width, src->height, src->comp);
 
-   src_data = (float *)src->data;
-   dest_data = (uint8_t *)dest->data;
-   for (i = 0; i < src->size; i++) {
-      int x = (int)(src_data[i] * 255);
-      dest_data[i] = (uint8_t)M_CLAMP(x, 0, 255);
+      src_data = (float *)src->data;
+      dest_data = (uint8_t *)dest->data;
+      for (i = 0; i < src->size; i++) {
+         int x = (int)(src_data[i] * 255);
+         dest_data[i] = (uint8_t)M_CLAMP(x, 0, 255);
+      }
    }
 }
 
 MIAPI void m_image_float_to_ushort(struct m_image *dest, const struct m_image *src)
 {
-   float *src_data;
-   uint16_t *dest_data;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_float_to_ushort(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_data;
+      uint16_t *dest_data;
+      int i;
 
-   m_image_create(dest, M_USHORT, src->width, src->height, src->comp);
+      m_image_create(dest, M_USHORT, src->width, src->height, src->comp);
 
-   src_data = (float *)src->data;
-   dest_data = (uint16_t *)dest->data;
-   for (i = 0; i < src->size; i++) {
-      int x = (int)(src_data[i] * 65535);
-      dest_data[i] = (uint16_t)M_CLAMP(x, 0, 65535);
+      src_data = (float *)src->data;
+      dest_data = (uint16_t *)dest->data;
+      for (i = 0; i < src->size; i++) {
+         int x = (int)(src_data[i] * 65535);
+         dest_data[i] = (uint16_t)M_CLAMP(x, 0, 65535);
+      }
    }
 }
 
 MIAPI void m_image_float_to_half(struct m_image *dest, const struct m_image *src)
 {
-   float *src_data;
-   uint16_t *dest_data;
-   int i;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_float_to_half(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_data;
+      uint16_t *dest_data;
+      int i;
 
-   m_image_create(dest, M_HALF, src->width, src->height, src->comp);
+      m_image_create(dest, M_HALF, src->width, src->height, src->comp);
 
-   src_data = (float *)src->data;
-   dest_data = (uint16_t *)dest->data;
-   for (i = 0; i < src->size; i++)
-      dest_data[i] = m_float2half(src_data[i]);
+      src_data = (float *)src->data;
+      dest_data = (uint16_t *)dest->data;
+      for (i = 0; i < src->size; i++)
+         dest_data[i] = m_float2half(src_data[i]);
+   }
 }
 
 MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image *src, int c)
@@ -1352,40 +1408,48 @@ MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image 
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int size = src->size;
-   int i;
-
-   if(c >= src->comp) {
-      assert(0);
-      return;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_extract_component(dest, &tmp, c);
+      m_image_destroy(&tmp);
    }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int size = src->size;
+      int i;
 
-   m_image_create(dest, src->type, width, height, 1);
+      if(c >= src->comp) {
+         assert(0);
+         return;
+      }
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_EXTRACT(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_EXTRACT(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_EXTRACT(uint32_t);
-      break;
-   case M_FLOAT:
-      M_EXTRACT(float);
-      break;
-   default:
-      assert(0);
-      break;
+      m_image_create(dest, src->type, width, height, 1);
+
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_EXTRACT(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_EXTRACT(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_EXTRACT(uint32_t);
+         break;
+      case M_FLOAT:
+         M_EXTRACT(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_EXTRACT
@@ -1423,38 +1487,46 @@ MIAPI void m_image_reframe_zero(struct m_image *dest, const struct m_image *src,
 
    if(left != 0 || top != 0 || right != 0 || bottom != 0) {
 
-      int comp = src->comp;
-      int width = src->width;
-      int height = src->height;
-      int width2 = width + left + right;
-      int height2 = height + top + bottom;
-
-      if(width2 > 0 && height2 > 0) {
-
-         switch(src->type) {
-         case M_BYTE:
-         case M_UBYTE:
-            M_REFRAME(uint8_t);
-            break;
-         case M_SHORT:
-         case M_USHORT:
-         case M_HALF:
-            M_REFRAME(uint16_t);
-            break;
-         case M_INT:
-         case M_UINT:
-            M_REFRAME(uint32_t);
-            break;
-         case M_FLOAT:
-            M_REFRAME(float);
-            break;
-         default:
-            assert(0);
-            break;
-         }
+      if (dest == src) {
+         struct m_image tmp = M_IMAGE_IDENTITY();
+         m_image_copy(&tmp, src);
+         m_image_reframe_zero(dest, &tmp, left, top, right, bottom);
+         m_image_destroy(&tmp);
       }
       else {
-         assert(0);
+         int comp = src->comp;
+         int width = src->width;
+         int height = src->height;
+         int width2 = width + left + right;
+         int height2 = height + top + bottom;
+
+         if(width2 > 0 && height2 > 0) {
+
+            switch(src->type) {
+            case M_BYTE:
+            case M_UBYTE:
+               M_REFRAME(uint8_t);
+               break;
+            case M_SHORT:
+            case M_USHORT:
+            case M_HALF:
+               M_REFRAME(uint16_t);
+               break;
+            case M_INT:
+            case M_UINT:
+               M_REFRAME(uint32_t);
+               break;
+            case M_FLOAT:
+               M_REFRAME(float);
+               break;
+            default:
+               assert(0);
+               break;
+            }
+         }
+         else {
+            assert(0);
+         }
       }
    }
    else {
@@ -1492,40 +1564,48 @@ MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int 
 
    if(left != 0 || top != 0 || right != 0 || bottom != 0) {
 
-      int comp = src->comp;
-      int width = src->width;
-      int height = src->height;
-      int width2 = width + left + right;
-      int height2 = height + top + bottom;
-      int wm1 = width - 1;
-      int hm1 = height - 1;
-
-      if(width2 > 0 && height2 > 0) {
-
-         switch(src->type) {
-         case M_BYTE:
-         case M_UBYTE:
-            M_REFRAME(uint8_t);
-            break;
-         case M_SHORT:
-         case M_USHORT:
-         case M_HALF:
-            M_REFRAME(uint16_t);
-            break;
-         case M_INT:
-         case M_UINT:
-            M_REFRAME(uint32_t);
-            break;
-         case M_FLOAT:
-            M_REFRAME(float);
-            break;
-         default:
-            assert(0);
-            break;
-         }
+      if (dest == src) {
+         struct m_image tmp = M_IMAGE_IDENTITY();
+         m_image_copy(&tmp, src);
+         m_image_reframe(dest, &tmp, left, top, right, bottom);
+         m_image_destroy(&tmp);
       }
       else {
-         assert(0);
+         int comp = src->comp;
+         int width = src->width;
+         int height = src->height;
+         int width2 = width + left + right;
+         int height2 = height + top + bottom;
+         int wm1 = width - 1;
+         int hm1 = height - 1;
+
+         if(width2 > 0 && height2 > 0) {
+
+            switch(src->type) {
+            case M_BYTE:
+            case M_UBYTE:
+               M_REFRAME(uint8_t);
+               break;
+            case M_SHORT:
+            case M_USHORT:
+            case M_HALF:
+               M_REFRAME(uint16_t);
+               break;
+            case M_INT:
+            case M_UINT:
+               M_REFRAME(uint32_t);
+               break;
+            case M_FLOAT:
+               M_REFRAME(float);
+               break;
+            default:
+               assert(0);
+               break;
+            }
+         }
+         else {
+            assert(0);
+         }
       }
    }
    else {
@@ -1550,34 +1630,42 @@ MIAPI void m_image_rotate_left(struct m_image *dest, const struct m_image *src)
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int x, y, c;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_rotate_left(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int x, y, c;
 
-   m_image_create(dest, src->type, height, width, comp);
+      m_image_create(dest, src->type, height, width, comp);
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_ROTATE_L(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_ROTATE_L(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_ROTATE_L(uint32_t);
-      break;
-   case M_FLOAT:
-      M_ROTATE_L(float);
-      break;
-   default:
-      assert(0);
-      break;
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_ROTATE_L(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_ROTATE_L(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_ROTATE_L(uint32_t);
+         break;
+      case M_FLOAT:
+         M_ROTATE_L(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_ROTATE_L
@@ -1598,34 +1686,42 @@ MIAPI void m_image_rotate_right(struct m_image *dest, const struct m_image *src)
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int x, y, c;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_rotate_right(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int x, y, c;
 
-   m_image_create(dest, src->type, height, width, comp);
+      m_image_create(dest, src->type, height, width, comp);
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_ROTATE_R(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_ROTATE_R(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_ROTATE_R(uint32_t);
-      break;
-   case M_FLOAT:
-      M_ROTATE_R(float);
-      break;
-   default:
-      assert(0);
-      break;
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_ROTATE_R(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_ROTATE_R(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_ROTATE_R(uint32_t);
+         break;
+      case M_FLOAT:
+         M_ROTATE_R(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_ROTATE_R
@@ -1646,34 +1742,42 @@ MIAPI void m_image_rotate_180(struct m_image *dest, const struct m_image *src)
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int x, y, c;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_rotate_180(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int x, y, c;
 
-   m_image_create(dest, src->type, width, height, comp);
+      m_image_create(dest, src->type, width, height, comp);
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_ROTATE_180(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_ROTATE_180(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_ROTATE_180(uint32_t);
-      break;
-   case M_FLOAT:
-      M_ROTATE_180(float);
-      break;
-   default:
-      assert(0);
-      break;
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_ROTATE_180(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_ROTATE_180(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_ROTATE_180(uint32_t);
+         break;
+      case M_FLOAT:
+         M_ROTATE_180(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_ROTATE_180
@@ -1694,34 +1798,42 @@ MIAPI void m_image_mirror_x(struct m_image *dest, const struct m_image *src)
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int x, y, c;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_mirror_x(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int x, y, c;
 
-   m_image_create(dest, src->type, width, height, comp);
+      m_image_create(dest, src->type, width, height, comp);
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_MIRROR_X(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_MIRROR_X(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_MIRROR_X(uint32_t);
-      break;
-   case M_FLOAT:
-      M_MIRROR_X(float);
-      break;
-   default:
-      assert(0);
-      break;
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_MIRROR_X(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_MIRROR_X(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_MIRROR_X(uint32_t);
+         break;
+      case M_FLOAT:
+         M_MIRROR_X(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_MIRROR_X
@@ -1742,34 +1854,42 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
       }\
    }
 
-   int width = src->width;
-   int height = src->height;
-   int comp = src->comp;
-   int x, y, c;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+	  m_image_mirror_y(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      int width = src->width;
+      int height = src->height;
+      int comp = src->comp;
+      int x, y, c;
 
-   m_image_create(dest, src->type, width, height, comp);
+      m_image_create(dest, src->type, width, height, comp);
 
-   switch(src->type)
-   {
-   case M_BYTE:
-   case M_UBYTE:
-      M_MIRROR_Y(uint8_t);
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      M_MIRROR_Y(uint16_t);
-      break;
-   case M_INT:
-   case M_UINT:
-      M_MIRROR_Y(uint32_t);
-      break;
-   case M_FLOAT:
-      M_MIRROR_Y(float);
-      break;
-   default:
-      assert(0);
-      break;
+      switch(src->type)
+      {
+      case M_BYTE:
+      case M_UBYTE:
+         M_MIRROR_Y(uint8_t);
+         break;
+      case M_SHORT:
+      case M_USHORT:
+      case M_HALF:
+         M_MIRROR_Y(uint16_t);
+         break;
+      case M_INT:
+      case M_UINT:
+         M_MIRROR_Y(uint32_t);
+         break;
+      case M_FLOAT:
+         M_MIRROR_Y(float);
+         break;
+      default:
+         assert(0);
+         break;
+      }
    }
 
    #undef M_MIRROR_Y
@@ -1809,17 +1929,17 @@ MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src
 
    for (i = 0; i < src->size; i+=4) {
       if (src_p[3] > 0.0f) {
-         float x = 1.0 / src_p[3];
+         float x = 1.0f / src_p[3];
          dest_p[0] = src_p[0] * x;
          dest_p[1] = src_p[1] * x;
          dest_p[2] = src_p[2] * x;
-	  }
-	  else {
+      }
+      else {
          dest_p[0] = 0;
          dest_p[1] = 0;
          dest_p[2] = 0;
-	  }
-	  dest_p[3] = src_p[3];
+      }
+      dest_p[3] = src_p[3];
       dest_p += 4;
       src_p += 4;
    }
@@ -2111,7 +2231,7 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* exit */
    if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
       if (dest != src) m_image_copy(dest, src);
-	  return;
+     return;
    }
 
    /* x blur */
@@ -2141,71 +2261,95 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
 
 MIAPI void m_image_grey(struct m_image *dest, const struct m_image *src)
 {
-   float *src_pixel;
-   float *dest_pixel;
-   int size = src->size;
-   int i, c = src->comp;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_grey(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_pixel;
+      float *dest_pixel;
+      int size = src->size;
+      int i, c = src->comp;
 
-   assert(src->size > 0 && src->type == M_FLOAT && src->comp > 2);
-   
-   m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+      assert(src->size > 0 && src->type == M_FLOAT && src->comp > 2);
+      
+      m_image_create(dest, M_FLOAT, src->width, src->height, 1);
 
-   src_pixel = (float *)src->data;
-   dest_pixel = (float *)dest->data;
+      src_pixel = (float *)src->data;
+      dest_pixel = (float *)dest->data;
 
-   for (i = 0; i < size; i+=c) {
-      float v = src_pixel[0] * 0.3f + src_pixel[1] * 0.5f + src_pixel[2] * 0.2f;
-      *dest_pixel = v;
-      dest_pixel++;
-      src_pixel+=c;
+      for (i = 0; i < size; i+=c) {
+         float v = src_pixel[0] * 0.3f + src_pixel[1] * 0.5f + src_pixel[2] * 0.2f;
+         *dest_pixel = v;
+         dest_pixel++;
+         src_pixel+=c;
+      }
    }
 }
 
 MIAPI void m_image_max(struct m_image *dest, const struct m_image *src)
 {
-   float *src_pixel;
-   float *dest_pixel;
-   int size = src->size;
-   int i, j, c = src->comp;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_max(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_pixel;
+      float *dest_pixel;
+      int size = src->size;
+      int i, j, c = src->comp;
 
-   assert(src->size > 0 && src->type == M_FLOAT);
+      assert(src->size > 0 && src->type == M_FLOAT);
 
-   m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+      m_image_create(dest, M_FLOAT, src->width, src->height, 1);
 
-   src_pixel = (float *)src->data;
-   dest_pixel = (float *)dest->data;
+      src_pixel = (float *)src->data;
+      dest_pixel = (float *)dest->data;
 
-   for (i = 0; i < size; i+=c) {
-      float v = src_pixel[0];
-      for (j = 1; j < c; j++)
-         v = M_MAX(v, src_pixel[j]);
-      *dest_pixel = v;
-      dest_pixel++;
-      src_pixel+=c;
+      for (i = 0; i < size; i+=c) {
+         float v = src_pixel[0];
+         for (j = 1; j < c; j++)
+            v = M_MAX(v, src_pixel[j]);
+         *dest_pixel = v;
+         dest_pixel++;
+         src_pixel+=c;
+      }
    }
 }
 
 MIAPI void m_image_max_abs(struct m_image *dest, const struct m_image *src)
 {
-   float *src_pixel;
-   float *dest_pixel;
-   int size = src->size;
-   int i, j, c = src->comp;
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m_image_max_abs(dest, &tmp);
+      m_image_destroy(&tmp);
+   }
+   else {
+      float *src_pixel;
+      float *dest_pixel;
+      int size = src->size;
+      int i, j, c = src->comp;
 
-   assert(src->size > 0 && src->type == M_FLOAT);
+      assert(src->size > 0 && src->type == M_FLOAT);
 
-   m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+      m_image_create(dest, M_FLOAT, src->width, src->height, 1);
 
-   src_pixel = (float *)src->data;
-   dest_pixel = (float *)dest->data;
+      src_pixel = (float *)src->data;
+      dest_pixel = (float *)dest->data;
 
-   for (i = 0; i < size; i+=c) {
-      float v = fabsf(src_pixel[0]);
-      for (j = 1; j < c; j++)
-         v = M_MAX(v, fabsf(src_pixel[j]));
-      *dest_pixel = v;
-      dest_pixel++;
-      src_pixel+=c;
+      for (i = 0; i < size; i+=c) {
+         float v = fabsf(src_pixel[0]);
+         for (j = 1; j < c; j++)
+            v = M_MAX(v, fabsf(src_pixel[j]));
+         *dest_pixel = v;
+         dest_pixel++;
+         src_pixel+=c;
+      }
    }
 }
 
@@ -2241,9 +2385,9 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src)
    
    #pragma omp parallel for schedule(dynamic, 8)
    for (y = 0; y < height; y++) {
-	  float * src_pixel = (float*)copy.data + y * w2;
-	  float * dest_pixel = (float*)dest->data + y * width * 2;
-	  int x;
+     float * src_pixel = (float*)copy.data + y * w2;
+     float * dest_pixel = (float*)dest->data + y * width * 2;
+     int x;
       for (x = 0; x < width; x++) {
          dest_pixel[0] = m__convolve_pixel(src_pixel, w2, kx);
          dest_pixel[1] = m__convolve_pixel(src_pixel, w2, ky);
@@ -2406,17 +2550,41 @@ static void m__dilate_erode(struct m_image *dest, const struct m_image *src, uin
 
 MIAPI void m_image_dilate(struct m_image *dest, const struct m_image *src)
 {
-   m__dilate_erode(dest, src, 0, 255, 1);
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m__dilate_erode(dest, &tmp, 0, 255, 1);
+      m_image_destroy(&tmp);
+   }
+   else {
+      m__dilate_erode(dest, src, 0, 255, 1);
+   }
 }
 
 MIAPI void m_image_erode(struct m_image *dest, const struct m_image *src)
 {
-   m__dilate_erode(dest, src, 255, 0, 1);
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m__dilate_erode(dest, &tmp, 255, 0, 1);
+      m_image_destroy(&tmp);
+   }
+   else { 
+      m__dilate_erode(dest, src, 255, 0, 1);
+   }
 }
 
 MIAPI void m_image_edge_4x(struct m_image *dest, const struct m_image *src, uint8_t ref)
 {
-   m__dilate_erode(dest, src, ref, 255, 0);
+   if (dest == src) {
+      struct m_image tmp = M_IMAGE_IDENTITY();
+      m_image_copy(&tmp, src);
+      m__dilate_erode(dest, &tmp, ref, 255, 0);
+      m_image_destroy(&tmp);
+   }
+   else {
+      m__dilate_erode(dest, src, ref, 255, 0);
+   }
 }
 
 /* Following C code from the article

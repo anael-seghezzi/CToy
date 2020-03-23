@@ -302,6 +302,7 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_mat4_transform3", m_mat4_transform3);
    tcc_add_symbol(ctoy__tcc, "m_mat4_transform4", m_mat4_transform4);
 
+   tcc_add_symbol(ctoy__tcc, "m_type_sizeof", m_type_sizeof);
    tcc_add_symbol(ctoy__tcc, "m_image_create", m_image_create);
    tcc_add_symbol(ctoy__tcc, "m_image_destroy", m_image_destroy);
    tcc_add_symbol(ctoy__tcc, "m_image_ubyte_to_float", m_image_ubyte_to_float);
