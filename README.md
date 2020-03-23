@@ -88,7 +88,7 @@ void ctoy_main_loop()
 void ctoy_end()
 {}
 ```
-(You can store any data that was manually allocated with malloc, it can be an array or a global pointer. Just avoid storing function pointers, as functions addresses may change after recompiles, or update them after calling ctoy_retrieve_memory.)
+(You can store any data that was manually allocated with malloc, it can be an array or a global pointer. Just avoid storing function pointers, as functions addresses may change after recompiles, or update them after calling ctoy_retrieve_memory)
 
 Documentation
 -------------
@@ -98,6 +98,15 @@ MaratisTCL: https://github.com/anael-seghezzi/Maratis-Tiny-C-library<br>
 OpenGLES2: https://www.khronos.org/registry/OpenGL-Refpages/es2.0/<br>
 OpenAL: https://www.openal.org/documentation/OpenAL_Programmers_Guide.pdf<br>
 
+Tutorials and examples
+----------------------
+
+Wiki: https://github.com/anael-seghezzi/CToy/wiki
+
+License
+-------
+
+CToy is licensed under the zlib/libpng License.
 
 Building CToy from sources (CMake)
 ----------------------------------
