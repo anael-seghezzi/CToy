@@ -1,4 +1,3 @@
-#include <ctoy.h>
 
 #define CTOY_SAMPLE 1 // change me
 

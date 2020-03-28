@@ -1,6 +1,7 @@
 // Dear Imgui demo
 // see https://github.com/ocornut/imgui
 
+#include <ctoy.h>
 #include "../cimgui/cimgui.h"
 #include "../util/imgui_ctoy.c"
 #include "../util/imgui_gles2.c"

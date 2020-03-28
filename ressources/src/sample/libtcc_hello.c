@@ -1,6 +1,7 @@
 // Can we compile and run C code dynamically from here too ? Really ?
 // Yes we can !!
 
+#include <ctoy.h>
 #include <libtcc.h>
 
 const char *script =

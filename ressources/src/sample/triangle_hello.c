@@ -1,5 +1,6 @@
 // OpenGL-ES2 hello triangle
 
+#include <ctoy.h>
 #include "../util/img_util.c"
 #include "../util/gl_util.c"
 

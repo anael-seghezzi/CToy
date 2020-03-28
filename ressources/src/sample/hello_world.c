@@ -1,5 +1,6 @@
 // Hello World!
 
+#include <ctoy.h>
 #include "../util/img_util.c"
 
 #define STAR_COUNT 32

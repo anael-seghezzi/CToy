@@ -1,5 +1,6 @@
 // OpenAL hello sound
 
+#include <ctoy.h>
 #include "../util/al_util.c"
 
 ALuint oal_buffer = 0;

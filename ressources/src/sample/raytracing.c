@@ -26,6 +26,8 @@
 
 #define USE_3D_NOISE /* raymarch 3d noise */
 
+#include <ctoy.h>
+
 #define STB_PERLIN_IMPLEMENTATION
 #include "../util/stb_perlin.h"
 
