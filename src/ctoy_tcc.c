@@ -449,7 +449,9 @@ void ctoy__add_libs(void)
             tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
 #else
             dlopen(filename, RTLD_LAZY);
+	#ifndef __APPLE__
             tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
+	#endif
 #endif
          }
       }
@@ -495,7 +497,6 @@ int ctoy__tcc_init(void)
    tcc_add_library(ctoy__tcc, "msvcrt");
    tcc_add_library(ctoy__tcc, "opengl32");
    tcc_add_library(ctoy__tcc, "OpenAL32");
-   //tcc_set_options(ctoy__tcc, "-Wl,--stack=8388608");
 #endif
    ctoy__add_libs();
 
