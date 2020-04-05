@@ -28,9 +28,8 @@ Download
 [- CToy 1.05 Linux64](http://anael.maratis3d.com/ctoy/bin/CToy-1.05-Linux64-x86_64.zip)<br>
 [- [all versions]](http://anael.maratis3d.com/ctoy/bin/)
 
-Requirement:
-For Win64, Microsoft Visual C++ 2015 Redistributable: https://www.microsoft.com/fr-fr/download/details.aspx?id=48145
-For Linux, OpenAL
+Requirement for Win64: Microsoft Visual C++ 2015 Redistributable<br> https://www.microsoft.com/fr-fr/download/details.aspx?id=48145 <br>
+Requirement For Linux: OpenAL
 
 Getting started
 ---------------
