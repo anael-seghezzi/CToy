@@ -23,4 +23,7 @@
 #elif CTOY_SAMPLE == 7
 #include "sample/imgui_hello.c"
 
+#elif CTOY_SAMPLE == 8
+#include "sample/bomber.c"
+
 #endif
