@@ -18,7 +18,13 @@ void ctoy_begin(void)
 
    s = tcc_new();
    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-   tcc_add_library_path(s, ".");
+#ifdef WIN32
+   tcc_set_lib_path(s, "sys/win");
+#elif defined(__APPLE__)
+   tcc_set_lib_path(s, "sys/osx");
+#elif defined(__linux__)
+   tcc_set_lib_path(s, "sys/linux");
+#endif
 
    if (tcc_compile_string(s, script) != -1) {
       if (tcc_relocate(s, TCC_RELOCATE_AUTO) >= 0) {

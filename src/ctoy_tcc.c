@@ -457,12 +457,11 @@ void ctoy__add_libs(void)
          if (! ctoy__is_directory(filename)) {
 #ifdef WIN32
             LoadLibrary(filename);
-            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
 #else
             dlopen(filename, RTLD_LAZY);
-	#ifndef __APPLE__
+#endif
+#ifndef __APPLE__
             tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
-	#endif
 #endif
          }
       }
@@ -489,11 +488,10 @@ int ctoy__tcc_init(void)
 #endif
 
    /* search path */
-   tcc_set_lib_path(ctoy__tcc, ".");
    tcc_add_library_path(ctoy__tcc, ctoy__dir);
 
    sprintf(path, "%s/sys/%s", ctoy__dir, sysdef);
-   tcc_add_library_path(ctoy__tcc, path);
+   tcc_set_lib_path(ctoy__tcc, path);
 
    sprintf(path, "%s/include", ctoy__dir);
    tcc_add_include_path(ctoy__tcc, path);
