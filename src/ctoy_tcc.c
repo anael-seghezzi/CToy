@@ -49,6 +49,14 @@ TCCState *  ctoy__tcc;
 int         ctoy__src_update = 0;
 int         ctoy__src_state = 0;
 
+#ifdef WIN32
+char sysdef[8] = "win";
+#elif defined(__APPLE__)
+char sysdef[8] = "osx";
+#elif defined(__linux__)
+char sysdef[8] = "linux";
+#endif
+
 #ifndef CTOY_PLAYER
 /* dynamic refresh */
 #define CTOY_MAX_SRC 256
@@ -432,8 +440,11 @@ void ctoy__all_symbols(void)
 
 void ctoy__add_libs(void)
 {
-   char filename[256];
-   DIR *pdir = opendir("lib");
+   char libpath[256], filename[256];
+   DIR *pdir;
+
+   sprintf(libpath, "lib/%s", sysdef);
+   pdir = opendir(libpath);
    if (pdir) {
 
       struct dirent *pent = NULL;
@@ -442,7 +453,7 @@ void ctoy__add_libs(void)
          if (pent->d_name[0] == '.')
             continue;
 
-         sprintf(filename, "lib/%s", pent->d_name);
+         sprintf(filename, "%s/%s", libpath, pent->d_name);
          if (! ctoy__is_directory(filename)) {
 #ifdef WIN32
             LoadLibrary(filename);
@@ -462,7 +473,7 @@ void ctoy__add_libs(void)
 
 int ctoy__tcc_init(void)
 {
-   char path[256];
+   char path[2048];
 
 #ifndef CTOY_PLAYER
    ctoy__src_count = 0;
@@ -480,6 +491,9 @@ int ctoy__tcc_init(void)
    /* search path */
    tcc_set_lib_path(ctoy__tcc, ".");
    tcc_add_library_path(ctoy__tcc, ctoy__dir);
+
+   sprintf(path, "%s/sys/%s", ctoy__dir, sysdef);
+   tcc_add_library_path(ctoy__tcc, path);
 
    sprintf(path, "%s/include", ctoy__dir);
    tcc_add_include_path(ctoy__tcc, path);
@@ -548,7 +562,7 @@ int main(int argc, char **argv)
 
 #ifdef __linux__
    {
-   	char tmp[256];
+   	  char tmp[256];
       readlink( "/proc/self/exe", tmp, 256);
       ctoy__get_directory(ctoy__dir, tmp);
    }
