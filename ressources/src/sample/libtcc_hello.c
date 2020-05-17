@@ -18,8 +18,8 @@ void ctoy_begin(void)
 
    s = tcc_new();
    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-#ifdef WIN32
-   tcc_set_lib_path(s, "sys/win");
+#ifdef _WIN32
+   tcc_add_library_path(s, "sys/win");
 #elif defined(__APPLE__)
    tcc_set_lib_path(s, "sys/osx");
 #elif defined(__linux__)

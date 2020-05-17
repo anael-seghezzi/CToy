@@ -491,7 +491,11 @@ int ctoy__tcc_init(void)
    tcc_add_library_path(ctoy__tcc, ctoy__dir);
 
    sprintf(path, "%s/sys/%s", ctoy__dir, sysdef);
+#ifdef WIN32
+   tcc_add_library_path(ctoy__tcc, path);
+#else
    tcc_set_lib_path(ctoy__tcc, path);
+#endif
 
    sprintf(path, "%s/include", ctoy__dir);
    tcc_add_include_path(ctoy__tcc, path);
