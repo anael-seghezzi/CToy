@@ -143,7 +143,8 @@ void ctoy__src_thread_destroy(void)
 void ctoy__src_thread_restart(void)
 {
    int i;
-   ctoy__src_thread_destroy();
+   if (ctoy__src_thread_id != 0)
+      ctoy__src_thread_destroy();
    ctoy__src_update = 0;
    for (i = 0; i < ctoy__src_count; i++)
       ctoy__src_t[i] = ctoy__file_t(ctoy__src_path[i]);
