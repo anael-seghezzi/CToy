@@ -87,14 +87,14 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
    #define M_LENGHT2(src) length(src)
    #define M_LENGHT3(src) length((float4)((src).x, (src).y, (src).z, 0.0f))
    #define M_LENGHT4(src) length(src)
-   #define M_MIN2(dest, A, B) (dest).xy = min(A.xy, B.xy);
-   #define M_MIN3(dest, A, B) (dest).x = M_MIN((A).x, (B).x); (dest).y = M_MIN((A).y, (B).y); (dest).z = M_MIN((A).z, (B).z);
-   #define M_MIN4(dest, A, B) (dest) = min(A, B);
-   #define M_MAX2(dest, A, B) (dest).xy = max(A.xy, B.xy);
-   #define M_MAX3(dest, A, B) (dest).x = M_MAX((A).x, (B).x); (dest).y = M_MAX((A).y, (B).y); (dest).z = M_MAX((A).z, (B).z);
-   #define M_MAX4(dest, A, B) (dest) = max(A, B);
-   #define M_NORMALIZE2(dest, src) (dest).xy = normalize((src).xy);
-   #define M_NORMALIZE4(dest, src) (dest) = normalize(src);
+   #define M_MIN2(dest, A, B) { (dest).xy = min(A.xy, B.xy); }
+   #define M_MIN3(dest, A, B) { (dest).x = M_MIN((A).x, (B).x); (dest).y = M_MIN((A).y, (B).y); (dest).z = M_MIN((A).z, (B).z); }
+   #define M_MIN4(dest, A, B) { (dest) = min(A, B); }
+   #define M_MAX2(dest, A, B) { (dest).xy = max(A.xy, B.xy); }
+   #define M_MAX3(dest, A, B) { (dest).x = M_MAX((A).x, (B).x); (dest).y = M_MAX((A).y, (B).y); (dest).z = M_MAX((A).z, (B).z); }
+   #define M_MAX4(dest, A, B) { (dest) = max(A, B); }
+   #define M_NORMALIZE2(dest, src) { (dest).xy = normalize((src).xy); }
+   #define M_NORMALIZE4(dest, src) { (dest) = normalize(src); }
 #else
    typedef struct {float x, y;} float2;       /* float2 */
    typedef struct {float x, y, z, w;} float4; /* float4 */
@@ -104,12 +104,12 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
    #define M_LENGHT2(src) sqrtf((src).x * (src).x + (src).y * (src).y)
    #define M_LENGHT3(src) sqrtf((src).x * (src).x + (src).y * (src).y + (src).z * (src).z)
    #define M_LENGHT4(src) sqrtf((src).x * (src).x + (src).y * (src).y + (src).z * (src).z + (src).w * (src).w)
-   #define M_MIN2(dest, A, B) (dest).x = M_MIN((A).x, (B).x); (dest).y = M_MIN((A).y, (B).y);
-   #define M_MIN3(dest, A, B) M_MIN2(dest, A, B); (dest).z = M_MIN((A).z, (B).z);
-   #define M_MIN4(dest, A, B) M_MIN3(dest, A, B); (dest).w = M_MIN((A).w, (B).w);
-   #define M_MAX2(dest, A, B) (dest).x = M_MAX((A).x, (B).x); (dest).y = M_MAX((A).y, (B).y);
-   #define M_MAX3(dest, A, B) M_MAX2(dest, A, B); (dest).z = M_MAX((A).z, (B).z);
-   #define M_MAX4(dest, A, B) M_MAX3(dest, A, B); (dest).w = M_MAX((A).w, (B).w);
+   #define M_MIN2(dest, A, B) { (dest).x = M_MIN((A).x, (B).x); (dest).y = M_MIN((A).y, (B).y); }
+   #define M_MIN3(dest, A, B) { M_MIN2(dest, A, B); (dest).z = M_MIN((A).z, (B).z); }
+   #define M_MIN4(dest, A, B) { M_MIN3(dest, A, B); (dest).w = M_MIN((A).w, (B).w); }
+   #define M_MAX2(dest, A, B) { (dest).x = M_MAX((A).x, (B).x); (dest).y = M_MAX((A).y, (B).y); }
+   #define M_MAX3(dest, A, B) { M_MAX2(dest, A, B); (dest).z = M_MAX((A).z, (B).z); }
+   #define M_MAX4(dest, A, B) { M_MAX3(dest, A, B); (dest).w = M_MAX((A).w, (B).w); }
    #define M_NORMALIZE2(dest, src){ float l = M_LENGHT2(src);\
       if (l > 0) { l = 1.0f / l; (dest).x = (src).x * l; (dest).y = (src).y * l; }\
       else { (dest).x = (dest).y = 0.0f; }}
@@ -123,23 +123,23 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
    else { (dest).x = (dest).y = (dest).z = 0.0f; }}
 
 #define M_CROSS2(A, B) ((A).x * (B).y - (A).y * (B).x)
-#define M_CROSS3(dest, A, B) (dest).x = (A).y * (B).z - (A).z * (B).y; (dest).y = (A).z * (B).x - (A).x * (B).z; (dest).z = (A).x * (B).y - (A).y * (B).x;
+#define M_CROSS3(dest, A, B) { (dest).x = (A).y * (B).z - (A).z * (B).y; (dest).y = (A).z * (B).x - (A).x * (B).z; (dest).z = (A).x * (B).y - (A).y * (B).x; }
 
-#define M_ADD2(dest, A, B) (dest).x = (A).x + (B).x; (dest).y = (A).y + (B).y;
-#define M_ADD3(dest, A, B) M_ADD2(dest, A, B) (dest).z = (A).z + (B).z;
-#define M_ADD4(dest, A, B) M_ADD3(dest, A, B) (dest).w = (A).w + (B).w;
+#define M_ADD2(dest, A, B) { (dest).x = (A).x + (B).x; (dest).y = (A).y + (B).y; }
+#define M_ADD3(dest, A, B) { M_ADD2(dest, A, B) (dest).z = (A).z + (B).z; }
+#define M_ADD4(dest, A, B) { M_ADD3(dest, A, B) (dest).w = (A).w + (B).w; }
 
-#define M_SUB2(dest, A, B) (dest).x = (A).x - (B).x; (dest).y = (A).y - (B).y;
-#define M_SUB3(dest, A, B) M_SUB2(dest, A, B) (dest).z = (A).z - (B).z;
-#define M_SUB4(dest, A, B) M_SUB3(dest, A, B) (dest).w = (A).w - (B).w;
+#define M_SUB2(dest, A, B) { (dest).x = (A).x - (B).x; (dest).y = (A).y - (B).y; }
+#define M_SUB3(dest, A, B) { M_SUB2(dest, A, B) (dest).z = (A).z - (B).z; }
+#define M_SUB4(dest, A, B) { M_SUB3(dest, A, B) (dest).w = (A).w - (B).w; }
 
-#define M_MUL2(dest, A, B) (dest).x = (A).x * (B).x; (dest).y = (A).y * (B).y;
-#define M_MUL3(dest, A, B) M_MUL2(dest, A, B) (dest).z = (A).z * (B).z;
-#define M_MUL4(dest, A, B) M_MUL3(dest, A, B) (dest).w = (A).w * (B).w;
+#define M_MUL2(dest, A, B) { (dest).x = (A).x * (B).x; (dest).y = (A).y * (B).y; }
+#define M_MUL3(dest, A, B) { M_MUL2(dest, A, B) (dest).z = (A).z * (B).z; }
+#define M_MUL4(dest, A, B) { M_MUL3(dest, A, B) (dest).w = (A).w * (B).w; }
 
-#define M_DIV2(dest, A, B) (dest).x = (A).x / (B).x; (dest).y = (A).y / (B).y;
-#define M_DIV3(dest, A, B) M_DIV2(dest, A, B) (dest).z = (A).z / (B).z;
-#define M_DIV4(dest, A, B) M_DIV3(dest, A, B) (dest).w = (A).w / (B).w;
+#define M_DIV2(dest, A, B) { (dest).x = (A).x / (B).x; (dest).y = (A).y / (B).y; }
+#define M_DIV3(dest, A, B) { M_DIV2(dest, A, B) (dest).z = (A).z / (B).z; }
+#define M_DIV4(dest, A, B) { M_DIV3(dest, A, B) (dest).w = (A).w / (B).w; }
 
 /* basic math */
 MMAPI unsigned int m_next_power_of_two(unsigned int x);
