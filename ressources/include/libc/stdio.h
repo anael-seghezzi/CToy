@@ -4,7 +4,6 @@
 #include "stddef.h"
 #include "stdarg.h"
 
-typedef struct __FILE FILE;
 typedef int64_t fpos_t;
 
 #define EOF (-1)
@@ -14,11 +13,25 @@ typedef int64_t fpos_t;
 #define FILENAME_MAX 256
 
 #ifdef _WIN64
-void * __iob_func(void);
+
+typedef struct _iob {
+	char *_ptr;
+	int _cnt;
+	char *_base;
+	int _flag;
+	int _file;
+	int _charbuf;
+	int _bufsiz;
+	char *_tmpfname;
+} FILE;
+
+FILE* __iob_func(void);
 #define stdin  (&__iob_func()[0])
 #define stdout (&__iob_func()[1])
 #define stderr (&__iob_func()[2])
+
 #else
+typedef struct __FILE FILE;
 extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;
