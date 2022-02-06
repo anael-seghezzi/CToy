@@ -13,9 +13,16 @@ typedef int64_t fpos_t;
 #define SEEK_SET 0
 #define FILENAME_MAX 256
 
+#ifdef _WIN64
+void * __iob_func(void);
+#define stdin  (&__iob_func()[0])
+#define stdout (&__iob_func()[1])
+#define stderr (&__iob_func()[2])
+#else
 extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;
+#endif
 
 int remove(const char *);
 int rename(const char *oldname, const char *newname);
