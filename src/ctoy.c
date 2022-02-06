@@ -638,6 +638,7 @@ void ctoy_window_title(const char *title)
 void ctoy_window_size(int width, int height)
 {
    glfwSetWindowSize(ctoy__window, width, height);
+   glfwGetFramebufferSize(ctoy__window, &ctoy__fb_width, &ctoy__fb_height);
    ctoy__win_width = width;
    ctoy__win_height = height;
 }
