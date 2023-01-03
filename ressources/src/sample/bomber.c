@@ -18,8 +18,8 @@
 #define MAP_BONUS 3
 
 #define SPR_W 5 // sprite width
-#define X 1 // to help visuale sprite arrays:
 
+#define X 1
 char sprite_rock[SPR_W*SPR_W] = {
    X, X, X, X, 0,
    X, 0, 0, X, 0,
@@ -75,6 +75,7 @@ char sprite_flame[SPR_W*SPR_W] = {
    X, X, X, X, X,
    0, X, 0, X, 0
 };
+#undef X
 
 // color 'palette' (sRGB color space)
 char ground_color[3] = {70, 120, 90};
