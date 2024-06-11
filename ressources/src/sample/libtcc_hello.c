@@ -18,6 +18,7 @@ void ctoy_begin(void)
 
    s = tcc_new();
    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+   tcc_set_lib_path(s, ".");
    tcc_add_library_path(s, ".");
 
    if (tcc_compile_string(s, script) != -1) {
