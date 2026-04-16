@@ -242,6 +242,8 @@ void ctoy__symbols(void)
 
    tcc_add_symbol(ctoy__tcc, "ctoy_argc", ctoy_argc);
    tcc_add_symbol(ctoy__tcc, "ctoy_argv", ctoy_argv);
+
+   tcc_add_symbol(ctoy__tcc, "exp2", exp2);
 }
 
 void ctoy__maratis_symbols(void)
