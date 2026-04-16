@@ -55,6 +55,7 @@
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #endif
 
 #ifdef __EMSCRIPTEN__
@@ -452,6 +453,17 @@ static void ctoy__destroy(void)
 static void ctoy__update(void)
 {
    int i;
+
+#ifdef WIN32
+   ALCint connected;
+   alcGetIntegerv(ctoy__oal_device, ALC_CONNECTED, 1, &connected);
+   if (!connected) {
+      LPALCRESETDEVICESOFT alcResetDeviceSOFT = alcGetProcAddress(ctoy__oal_device, "alcResetDeviceSOFT");
+      if (alcResetDeviceSOFT) {
+         alcResetDeviceSOFT(ctoy__oal_device, NULL);
+      }
+   }
+#endif
 
    /* joystick */
    for (i = 0; i < CTOY_JOY_COUNT; i++)
