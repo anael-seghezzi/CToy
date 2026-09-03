@@ -297,6 +297,10 @@ void ImGui_ImplOpenGLES2_RenderDrawData(ImDrawData* draw_data)
     }
 
     // Restore modified GL state
+    glDisableVertexAttribArray(g_AttribLocationPosition);
+    glDisableVertexAttribArray(g_AttribLocationUV);
+    glDisableVertexAttribArray(g_AttribLocationColor);
+
     glUseProgram(last_program);
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #ifdef GL_SAMPLER_BINDING
