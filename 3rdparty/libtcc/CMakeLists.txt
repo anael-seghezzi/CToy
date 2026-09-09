@@ -12,6 +12,7 @@ if(WIN32)
     set(TCC_NATIVE_TARGET "Win32")
   endif()
 else()
+  set(BUILD_SHARED_LIBS ON)
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set(TCC_NATIVE_TARGET "ARM")
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^armv5")
@@ -113,7 +114,7 @@ macro(make_libtcc1 prefix xcc xar defs includes sources)
   endforeach()
   add_custom_command(OUTPUT ${libtcc1_prefix}libtcc1.a
     COMMAND tcc -ar ${libtcc1_prefix}libtcc1.a ${libtcc1_objects}
-    DEPENDS tcc -ar ${libtcc1_objects}
+    DEPENDS ${libtcc1_objects}
   )
   add_custom_target(${libtcc1_prefix}libtcc1 ALL DEPENDS ${libtcc1_prefix}libtcc1.a)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${libtcc1_prefix}libtcc1.a
@@ -149,7 +150,9 @@ macro(make_tcc native_name cross_name cross_enabled definitions tcc_sources libt
       if(NOT WIN32)
         target_link_libraries(tcc dl)
       endif()
-      install(TARGETS tcc libtcc RUNTIME DESTINATION ${EXE_PATH} LIBRARY DESTINATION ${NATIVE_LIB_PATH} ARCHIVE DESTINATION ${NATIVE_LIB_PATH})
+      install(TARGETS tcc RUNTIME DESTINATION ${EXE_PATH} LIBRARY DESTINATION ${NATIVE_LIB_PATH} ARCHIVE DESTINATION ${NATIVE_LIB_PATH})
+      install(TARGETS libtcc DESTINATION ${EXE_PATH})
+      install(TARGETS libtcc DESTINATION ${NATIVE_LIB_PATH})
       set_target_properties(tcc libtcc PROPERTIES COMPILE_DEFINITIONS "${TCC_NATIVE_DEFINITIONS}")
       
       if("${libtcc_sources}" STRGREATER "")
@@ -190,7 +193,7 @@ make_tcc("i386" i386-linux-gnu TCC_BUILD_I386
 make_tcc("x86_64" x86_64-linux-gnu TCC_BUILD_X64
   TCC_TARGET_X86_64
   "${X86_64_SOURCES}"
-  "" "lib/alloca86_64.S" ""
+  "" "lib/alloca86_64.S;lib/alloca86_64-bt.S;lib/va_list.c" ""
 )
 set(ARM_DEFINITIONS TCC_TARGET_ARM TCC_ARM_VERSION=${TCC_ARM_VERSION})
 make_tcc("" arm-linux-gnueabihf TCC_BUILD_ARM_EABIHF

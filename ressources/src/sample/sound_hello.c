@@ -45,12 +45,12 @@ void sound_stop(void)
    alSourceStop(oal_source);
 }
 
-float log2(float n)
+float slog2(float n)
 {
    return log(n) / 0.69314718246459961;  
 }
 
-float round(float d)
+float sround(float d)
 {
    return floor(d + 0.5);
 }
@@ -72,7 +72,7 @@ float saw_wave(float t)
 
 float tri_wave(float t)
 {
-   return 1.0 - 4.0 * fabs(round(t - 0.25) - (t - 0.25));
+   return 1.0 - 4.0 * fabs(sround(t - 0.25) - (t - 0.25));
 }
 
 float noise(float t)

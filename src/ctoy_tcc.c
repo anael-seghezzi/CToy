@@ -243,6 +243,8 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_argc", ctoy_argc);
    tcc_add_symbol(ctoy__tcc, "ctoy_argv", ctoy_argv);
 
+   tcc_add_symbol(ctoy__tcc, "ctoy__stat", ctoy__stat);
+   
    tcc_add_symbol(ctoy__tcc, "exp2", exp2);
 
    tcc_add_symbol(ctoy__tcc, "thrd_create", thrd_create);

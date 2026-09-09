@@ -103,7 +103,7 @@ INSTALL(DIRECTORY ../3rdparty/openal-soft DESTINATION "${MTCL_INSTALL_DIR}/tool/
 INSTALL(DIRECTORY ../3rdparty/tinycthread DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
 
 INSTALL(FILES ../3rdparty/libtcc/libtcc.h DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty/libtcc")
-install(TARGETS libtcc RUNTIME DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty/libtcc")
+## install(TARGETS libtcc RUNTIME DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty/libtcc")
 
 IF(APPLE)
   SET_TARGET_PROPERTIES(

@@ -1150,7 +1150,7 @@ static int tcc_add_support(TCCState *s1, const char *filename)
 {
     char buf[1024];
     snprintf(buf, sizeof(buf), "%s/%s", s1->tcc_lib_path, filename);
-    return tcc_add_file(s1, buf);
+    return tcc_add_dll(s1, buf, AFF_PRINT_ERROR);
 }
 
 ST_FUNC void tcc_add_bcheck(TCCState *s1)
