@@ -32,16 +32,16 @@ INCLUDE_DIRECTORIES(../3rdparty/dirent/include)
 ENDIF(WIN32)
 
 IF(WIN32)
-  LINK_DIRECTORIES(../3rdparty/libtcc/win)
+  LINK_DIRECTORIES(${MTCL_INSTALL_DIR})
 	LINK_DIRECTORIES(../3rdparty/openal-soft/lib/)
 	SET(OPENAL_LIBRARY OpenAL32)
 ENDIF(WIN32)
 IF(APPLE)
-  LINK_DIRECTORIES(../3rdparty/libtcc/osx)
+  LINK_DIRECTORIES(${MTCL_INSTALL_DIR})
 	FIND_LIBRARY(OPENAL_LIBRARY OpenAL)
 ENDIF(APPLE)
 IF(UNIX AND NOT APPLE)
-  LINK_DIRECTORIES(../3rdparty/libtcc/linux)
+  LINK_DIRECTORIES(${MTCL_INSTALL_DIR})
   FIND_PACKAGE(OpenAL REQUIRED)
 ENDIF(UNIX AND NOT APPLE)
 
@@ -56,7 +56,7 @@ TARGET_LINK_LIBRARIES(CToy
   ## 3rdparty
   ${GLFW_LIBRARIES}
   ${TINYCTHREAD_LIBRARIES}
-  tcc
+  libtcc
 
   ## System libraries
   ${OPENGL_LIBRARIES}
@@ -72,7 +72,7 @@ TARGET_LINK_LIBRARIES(CToy_player
   ## 3rdparty
   ${GLFW_LIBRARIES}
   ${TINYCTHREAD_LIBRARIES}
-  tcc
+  libtcc
 
   ## System libraries
   ${OPENGL_LIBRARIES}
@@ -86,18 +86,8 @@ INSTALL(TARGETS CToy DESTINATION ${MTCL_INSTALL_DIR})
 INSTALL(TARGETS CToy_player DESTINATION ${MTCL_INSTALL_DIR})
 
 IF(WIN32)
-  INSTALL(FILES ../3rdparty/libtcc/win/libtcc.dll DESTINATION ${MTCL_INSTALL_DIR})
-  INSTALL(FILES ../3rdparty/libtcc/win/libtcc1.a DESTINATION ${MTCL_INSTALL_DIR})
   INSTALL(FILES ../3rdparty/openal-soft/lib/OpenAL32.dll DESTINATION ${MTCL_INSTALL_DIR})
 ENDIF(WIN32)
-IF(APPLE)
-  INSTALL(FILES ../3rdparty/libtcc/osx/libtcc.dylib DESTINATION ${MTCL_INSTALL_DIR})
-  INSTALL(FILES ../3rdparty/libtcc/osx/libtcc1.a DESTINATION ${MTCL_INSTALL_DIR})
-ENDIF(APPLE)
-IF(UNIX AND NOT APPLE)
-  INSTALL(FILES ../3rdparty/libtcc/linux/x86-64/libtcc1.a DESTINATION ${MTCL_INSTALL_DIR}/x86-64)
-  INSTALL(FILES ../3rdparty/libtcc/linux/libtcc.so DESTINATION ${MTCL_INSTALL_DIR})
-ENDIF(UNIX AND NOT APPLE)
 
 INSTALL(DIRECTORY ../ressources/data DESTINATION ${MTCL_INSTALL_DIR})
 INSTALL(DIRECTORY ../ressources/include DESTINATION ${MTCL_INSTALL_DIR})
@@ -105,7 +95,15 @@ INSTALL(DIRECTORY ../ressources/src DESTINATION ${MTCL_INSTALL_DIR})
 INSTALL(DIRECTORY ../ressources/tool DESTINATION ${MTCL_INSTALL_DIR})
 FILE(GLOB SRC_CORE ../src/ctoy_srgb.h ../src/ctoy.* ../src/m_* ../src/stb_*)
 INSTALL(FILES ${SRC_CORE} DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/src")
-INSTALL(DIRECTORY ../3rdparty DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native")
+
+INSTALL(DIRECTORY ../3rdparty/dirent DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
+INSTALL(DIRECTORY ../3rdparty/glad DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
+INSTALL(DIRECTORY ../3rdparty/glfw DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
+INSTALL(DIRECTORY ../3rdparty/openal-soft DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
+INSTALL(DIRECTORY ../3rdparty/tinycthread DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty")
+
+INSTALL(FILES ../3rdparty/libtcc/libtcc.h DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty/libtcc")
+install(TARGETS libtcc RUNTIME DESTINATION "${MTCL_INSTALL_DIR}/tool/build_native/3rdparty/libtcc")
 
 IF(APPLE)
   SET_TARGET_PROPERTIES(

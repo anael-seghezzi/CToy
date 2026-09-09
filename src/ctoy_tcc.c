@@ -453,11 +453,11 @@ void ctoy__add_libs(void)
          if (! ctoy__is_directory(filename)) {
 #ifdef WIN32
             LoadLibrary(filename);
-            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
+            tcc_add_file(ctoy__tcc, filename);
 #else
             dlopen(filename, RTLD_LAZY);
 	#ifndef __APPLE__
-            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
+            tcc_add_file(ctoy__tcc, filename);
 	#endif
 #endif
          }
@@ -508,7 +508,7 @@ int ctoy__tcc_init(void)
    ctoy__add_libs();
 
    /* main.c */
-   if (tcc_add_file(ctoy__tcc, "src/main.c", TCC_FILETYPE_C) == -1)
+   if (tcc_add_file(ctoy__tcc, "src/main.c") == -1)
         return 0;
 
    /* symbols */

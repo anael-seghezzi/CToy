@@ -1,3 +1,4 @@
+ADD_SUBDIRECTORY(libtcc)
 ADD_SUBDIRECTORY(tinycthread)
 
 option(GLFW_BUILD_EXAMPLES OFF)
