@@ -42,6 +42,18 @@
 #define CTOY_CHAR_MAX 256 // maximum characters per update
 #define CTOY_PEN_DATA_MAX 256 // maximum pen tablet data per update
 
+/* threads */
+#define thrd_error    0
+#define thrd_success  1
+#define thrd_timedout 2
+#define thrd_busy     3
+#define thrd_nomem    4
+typedef void* thrd_t;
+typedef int (*thrd_start_t)(void *arg);
+int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
+int thrd_join(thrd_t thr, int *res);
+void thrd_yield(void);
+
 /* main entry points for ctoy */
 void ctoy_begin(void); // called at the beginning of the program
 void ctoy_main_loop(void); // called at every update of the main loop

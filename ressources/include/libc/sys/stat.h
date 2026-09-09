@@ -67,14 +67,12 @@ struct stat { /* OSX */
 };
 #endif
 
-#if defined(_WIN32)
-int _stat64i32(const char *, struct stat *);
-int _mkdir(const char *);
-#define stat _stat64i32
-#define mkdir(f, o) _mkdir(f)
-
-#else
 int stat(const char *, struct stat *);
+
+#if defined(_WIN32)
+int _mkdir(const char *);
+#define mkdir(f, o) _mkdir(f)
+#else
 int mkdir(const char *, unsigned int);
 #endif
 

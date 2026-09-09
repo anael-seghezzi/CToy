@@ -244,6 +244,10 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_argv", ctoy_argv);
 
    tcc_add_symbol(ctoy__tcc, "exp2", exp2);
+
+   tcc_add_symbol(ctoy__tcc, "thrd_create", thrd_create);
+   tcc_add_symbol(ctoy__tcc, "thrd_join", thrd_join);
+   tcc_add_symbol(ctoy__tcc, "thrd_yield", thrd_yield);
 }
 
 void ctoy__maratis_symbols(void)
