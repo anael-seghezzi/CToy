@@ -48,6 +48,8 @@ ENDIF(UNIX AND NOT APPLE)
 ADD_EXECUTABLE(CToy ${SOURCES} ${HEADERS})
 ADD_EXECUTABLE(CToy_player ${SOURCES} ${HEADERS})
 set_target_properties(CToy_player PROPERTIES COMPILE_DEFINITIONS "CTOY_PLAYER")
+add_dependencies(CToy libtcc1)
+add_dependencies(CToy_player libtcc1)
 
 TARGET_LINK_LIBRARIES(CToy
   ## Maratis

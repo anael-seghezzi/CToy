@@ -1,9 +1,10 @@
 project(tcc C)
 cmake_minimum_required(VERSION 2.6)
 
+set(BUILD_SHARED_LIBS ON)
+
 # Detect native platform
 if(WIN32)
-  set(BUILD_SHARED_LIBS ON)
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM")
     set(TCC_NATIVE_TARGET "WinCE")
   elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -12,7 +13,6 @@ if(WIN32)
     set(TCC_NATIVE_TARGET "Win32")
   endif()
 else()
-  set(BUILD_SHARED_LIBS ON)
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set(TCC_NATIVE_TARGET "ARM")
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^armv5")
@@ -114,7 +114,7 @@ macro(make_libtcc1 prefix xcc xar defs includes sources)
   endforeach()
   add_custom_command(OUTPUT ${libtcc1_prefix}libtcc1.a
     COMMAND tcc -ar ${libtcc1_prefix}libtcc1.a ${libtcc1_objects}
-    DEPENDS ${libtcc1_objects}
+    DEPENDS tcc ${libtcc1_objects}
   )
   add_custom_target(${libtcc1_prefix}libtcc1 ALL DEPENDS ${libtcc1_prefix}libtcc1.a)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${libtcc1_prefix}libtcc1.a
@@ -143,6 +143,7 @@ macro(make_tcc native_name cross_name cross_enabled definitions tcc_sources libt
         libtcc.c
       )
       set_target_properties(libtcc PROPERTIES OUTPUT_NAME tcc PREFIX lib)
+	  add_dependencies(libtcc tcc)
       if(WIN32)
         set_target_properties(libtcc PROPERTIES LINK_FLAGS "-Wl,--output-def,libtcc.def")
       endif()
@@ -150,7 +151,7 @@ macro(make_tcc native_name cross_name cross_enabled definitions tcc_sources libt
       if(NOT WIN32)
         target_link_libraries(tcc dl)
       endif()
-      install(TARGETS tcc RUNTIME DESTINATION ${EXE_PATH} LIBRARY DESTINATION ${NATIVE_LIB_PATH} ARCHIVE DESTINATION ${NATIVE_LIB_PATH})
+      install(TARGETS LIBRARY DESTINATION ${NATIVE_LIB_PATH})
       install(TARGETS libtcc DESTINATION ${EXE_PATH})
       install(TARGETS libtcc DESTINATION ${NATIVE_LIB_PATH})
       set_target_properties(tcc libtcc PROPERTIES COMPILE_DEFINITIONS "${TCC_NATIVE_DEFINITIONS}")
@@ -178,7 +179,7 @@ make_tcc("Win32" i386-w64-mingw32 TCC_BUILD_WIN32
 make_tcc("Win64" x86_64-w64-mingw32 TCC_BUILD_WIN64
   "TCC_TARGET_X86_64;TCC_TARGET_PE;LIBTCC_AS_DLL"
   "${X86_64_SOURCES};tccpe.c"
-  "" "/lib/alloca86_64.S;${LIBTCC1_WIN_SOURCES}" "win32/include;win32/include/winapi"
+  "" "/lib/alloca86_64.S;lib/alloca86_64-bt.S;lib/va_list.c;${LIBTCC1_WIN_SOURCES}" "win32/include;win32/include/winapi"
 )
 make_tcc("WinCE" arm-wince-mingw32ce TCC_BUILD_WINCE
   "TCC_TARGET_ARM;TCC_ARM_VERSION=${TCC_ARM_VERSION};TCC_TARGET_PE"
