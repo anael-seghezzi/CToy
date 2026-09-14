@@ -426,6 +426,7 @@ void ctoy__glfw_symbols(void)
    tcc_add_symbol(ctoy__tcc, "glfwGetInputMode", glfwGetInputMode);
    tcc_add_symbol(ctoy__tcc, "glfwSetInputMode", glfwSetInputMode);
    tcc_add_symbol(ctoy__tcc, "glfwCreateStandardCursor", glfwCreateStandardCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwCreateCursor", glfwCreateCursor);
    tcc_add_symbol(ctoy__tcc, "glfwSetCursor", glfwSetCursor);
 }
 
