@@ -873,6 +873,7 @@ static int prepare_dynamic_rel(TCCState *s1, Section *sr)
         sym_index = ELFW(R_SYM)(rel->r_info);
         type = ELFW(R_TYPE)(rel->r_info);
         switch(type) {
+#if defined(TCC_TARGET_I386) || defined(TCC_TARGET_X86_64)
 #if defined(TCC_TARGET_I386)
         case R_386_32:
             if (!get_sym_attr(s1, sym_index, 0)->dyn_index
@@ -896,6 +897,7 @@ static int prepare_dynamic_rel(TCCState *s1, Section *sr)
             if (get_sym_attr(s1, sym_index, 0)->dyn_index)
                 count++;
             break;
+#endif
         default:
             break;
         }
@@ -1144,14 +1146,14 @@ static void add_init_array_defines(TCCState *s1, const char *section_name)
                 ELFW(ST_INFO)(STB_GLOBAL, STT_NOTYPE), 0,
                 s->sh_num, sym_end);
 }
-#endif
 
 static int tcc_add_support(TCCState *s1, const char *filename)
 {
     char buf[1024];
     snprintf(buf, sizeof(buf), "%s/%s", s1->tcc_lib_path, filename);
-    return tcc_add_dll(s1, buf, AFF_PRINT_ERROR);
+    return tcc_add_file(s1, buf);
 }
+#endif
 
 ST_FUNC void tcc_add_bcheck(TCCState *s1)
 {
@@ -1187,8 +1189,10 @@ ST_FUNC void tcc_add_bcheck(TCCState *s1)
 /* add tcc runtime libraries */
 ST_FUNC void tcc_add_runtime(TCCState *s1)
 {
+    s1->filetype = 0;
     tcc_add_bcheck(s1);
     tcc_add_pragma_libs(s1);
+#ifndef TCC_TARGET_PE
     /* add libc */
     if (!s1->nostdlib) {
         tcc_add_library_err(s1, "c");
@@ -1205,6 +1209,7 @@ ST_FUNC void tcc_add_runtime(TCCState *s1)
         if (s1->output_type != TCC_OUTPUT_MEMORY)
             tcc_add_crt(s1, "crtn.o");
     }
+#endif
 }
 
 /* add various standard linker symbols (must be done after the
@@ -1359,6 +1364,8 @@ ST_FUNC void fill_got(TCCState *s1)
 static void fill_local_got_entries(TCCState *s1)
 {
     ElfW_Rel *rel;
+    if (!s1->got->reloc)
+        return;
     for_each_elem(s1->got->reloc, 0, rel, ElfW_Rel) {
 	if (ELFW(R_TYPE)(rel->r_info) == R_RELATIVE) {
 	    int sym_index = ELFW(R_SYM) (rel->r_info);
@@ -1531,7 +1538,7 @@ static int alloc_sec_names(TCCState *s1, int file_type, Section *strsec)
             prepare_dynamic_rel(s1, s)) {
                 if (s1->sections[s->sh_info]->sh_flags & SHF_EXECINSTR)
                     textrel = 1;
-        } else if (s1->do_debug ||
+        } else if ((s1->do_debug && s->sh_type != SHT_RELX) ||
             file_type == TCC_OUTPUT_OBJ ||
             (s->sh_flags & SHF_ALLOC) ||
 	    i == (s1->nb_sections - 1)) {
@@ -1832,14 +1839,7 @@ static int final_sections_reloc(TCCState *s1)
     /* XXX: ignore sections with allocated relocations ? */
     for(i = 1; i < s1->nb_sections; i++) {
         s = s1->sections[i];
-#if defined(TCC_TARGET_I386) || defined(TCC_MUSL)
-        if (s->reloc && s != s1->got && (s->sh_flags & SHF_ALLOC)) //gr
-        /* On X86 gdb 7.3 works in any case but gdb 6.6 will crash if SHF_ALLOC
-        checking is removed */
-#else
         if (s->reloc && s != s1->got)
-        /* On X86_64 gdb 7.3 will crash if SHF_ALLOC checking is present */
-#endif
             relocate_section(s1, s);
     }
 
@@ -2445,8 +2445,11 @@ ST_FUNC int tcc_load_object_file(TCCState *s1,
         a = (Stab_Sym *)(s->data + sm_table[stab_index].offset);
         b = (Stab_Sym *)(s->data + s->data_offset);
         o = sm_table[stabstr_index].offset;
-        while (a < b)
-            a->n_strx += o, a++;
+        while (a < b) {
+            if (a->n_strx)
+                a->n_strx += o;
+            a++;
+        }
     }
 
     /* second short pass to update sh_link and sh_info fields of new
@@ -2633,7 +2636,7 @@ static int tcc_load_alacarte(TCCState *s1, int fd, int size, int entrysize)
 }
 
 /* load a '.a' file */
-ST_FUNC int tcc_load_archive(TCCState *s1, int fd)
+ST_FUNC int tcc_load_archive(TCCState *s1, int fd, int alacarte)
 {
     ArchiveHeader hdr;
     char ar_size[11];
@@ -2667,10 +2670,10 @@ ST_FUNC int tcc_load_archive(TCCState *s1, int fd)
         size = (size + 1) & ~1;
         if (!strcmp(ar_name, "/")) {
             /* coff symbol table : we handle it */
-            if(s1->alacarte_link)
+            if (alacarte)
                 return tcc_load_alacarte(s1, fd, size, 4);
 	} else if (!strcmp(ar_name, "/SYM64/")) {
-            if(s1->alacarte_link)
+            if (alacarte)
                 return tcc_load_alacarte(s1, fd, size, 8);
         } else {
             ElfW(Ehdr) ehdr;

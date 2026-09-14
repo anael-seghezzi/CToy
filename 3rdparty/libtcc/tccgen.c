@@ -19,7 +19,6 @@
  */
 
 #include "tcc.h"
-
 /********************************************************/
 /* global variables */
 
@@ -2049,9 +2048,10 @@ static void gen_opif(int op)
         case '*': f1 *= f2; break;
         case '/': 
             if (f2 == 0.0) {
-                if (const_wanted)
-                    tcc_error("division by zero in constant");
-                goto general_case;
+		/* If not in initializer we need to potentially generate
+		   FP exceptions at runtime, otherwise we want to fold.  */
+                if (!const_wanted)
+                    goto general_case;
             }
             f1 /= f2; 
             break;
@@ -2632,18 +2632,22 @@ static void gen_cast(CType *type)
                     tcc_warning("nonportable conversion from pointer to char/short");
                 }
                 force_charshort_cast(dbt);
-#if PTR_SIZE == 4
             } else if ((dbt & VT_BTYPE) == VT_INT) {
                 /* scalar to int */
                 if ((sbt & VT_BTYPE) == VT_LLONG) {
+#if PTR_SIZE == 4
                     /* from long long: just take low order word */
                     lexpand();
                     vpop();
-                } 
+#else
+		    vpushi(0xffffffff);
+		    vtop->type.t |= VT_UNSIGNED;
+		    gen_op('&');
+#endif
+                }
                 /* if lvalue and single word type, nothing to do because
                    the lvalue already contains the real type size (see
                    VT_LVAL_xxx constants) */
-#endif
             }
         }
     } else if ((dbt & VT_BTYPE) == VT_PTR && !(vtop->r & VT_LVAL)) {
@@ -2791,8 +2795,6 @@ static int is_compatible_func(CType *type1, CType *type2)
 
 /* return true if type1 and type2 are the same.  If unqualified is
    true, qualifiers on the types are ignored.
-
-   - enums are not checked as gcc __builtin_types_compatible_p () 
  */
 static int compare_types(CType *type1, CType *type2, int unqualified)
 {
@@ -2824,6 +2826,8 @@ static int compare_types(CType *type1, CType *type2, int unqualified)
         return (type1->ref == type2->ref);
     } else if (bt1 == VT_FUNC) {
         return is_compatible_func(type1, type2);
+    } else if (IS_ENUM(type1->t) || IS_ENUM(type2->t)) {
+        return type1->ref == type2->ref;
     } else {
         return 1;
     }
@@ -2933,17 +2937,26 @@ static void type_to_str(char *buf, int buf_size,
         break;
     case VT_FUNC:
         s = type->ref;
-        type_to_str(buf, buf_size, &s->type, varstr);
-        pstrcat(buf, buf_size, "(");
+        buf1[0]=0;
+        if (varstr && '*' == *varstr) {
+            pstrcat(buf1, sizeof(buf1), "(");
+            pstrcat(buf1, sizeof(buf1), varstr);
+            pstrcat(buf1, sizeof(buf1), ")");
+        }
+        pstrcat(buf1, buf_size, "(");
         sa = s->next;
         while (sa != NULL) {
-            type_to_str(buf1, sizeof(buf1), &sa->type, NULL);
-            pstrcat(buf, buf_size, buf1);
+            char buf2[256];
+            type_to_str(buf2, sizeof(buf2), &sa->type, NULL);
+            pstrcat(buf1, sizeof(buf1), buf2);
             sa = sa->next;
             if (sa)
-                pstrcat(buf, buf_size, ", ");
+                pstrcat(buf1, sizeof(buf1), ", ");
         }
-        pstrcat(buf, buf_size, ")");
+        if (s->f.func_type == FUNC_ELLIPSIS)
+            pstrcat(buf1, sizeof(buf1), ", ...");
+        pstrcat(buf1, sizeof(buf1), ")");
+        type_to_str(buf, buf_size, &s->type, buf1);
         goto no_var;
     case VT_PTR:
         s = type->ref;
@@ -2975,22 +2988,14 @@ static void gen_assign_cast(CType *dt)
 {
     CType *st, *type1, *type2;
     char buf1[256], buf2[256];
-    int dbt, sbt;
+    int dbt, sbt, qualwarn, lvl;
 
     st = &vtop->type; /* source type */
     dbt = dt->t & VT_BTYPE;
     sbt = st->t & VT_BTYPE;
     if (sbt == VT_VOID || dbt == VT_VOID) {
 	if (sbt == VT_VOID && dbt == VT_VOID)
-	    ; /*
-	      It is Ok if both are void
-	      A test program:
-	        void func1() {}
-		void func2() {
-		  return func1();
-		}
-	      gcc accepts this program
-	      */
+	    ; /* It is Ok if both are void */
 	else
     	    tcc_error("cannot cast from/to void");
     }
@@ -3001,43 +3006,49 @@ static void gen_assign_cast(CType *dt)
         /* special cases for pointers */
         /* '0' can also be a pointer */
         if (is_null_pointer(vtop))
-            goto type_ok;
+            break;
         /* accept implicit pointer to integer cast with warning */
         if (is_integer_btype(sbt)) {
             tcc_warning("assignment makes pointer from integer without a cast");
-            goto type_ok;
+            break;
         }
         type1 = pointed_type(dt);
-        /* a function is implicitly a function pointer */
-        if (sbt == VT_FUNC) {
-            if ((type1->t & VT_BTYPE) != VT_VOID &&
-                !is_compatible_types(pointed_type(dt), st))
-                tcc_warning("assignment from incompatible pointer type");
-            goto type_ok;
-        }
-        if (sbt != VT_PTR)
+        if (sbt == VT_PTR)
+            type2 = pointed_type(st);
+        else if (sbt == VT_FUNC)
+            type2 = st; /* a function is implicitly a function pointer */
+        else
             goto error;
-        type2 = pointed_type(st);
-        if ((type1->t & VT_BTYPE) == VT_VOID || 
-            (type2->t & VT_BTYPE) == VT_VOID) {
-            /* void * can match anything */
-        } else {
-            //printf("types %08x %08x\n", type1->t, type2->t);
-            /* exact type match, except for qualifiers */
-            if (!is_compatible_unqualified_types(type1, type2)) {
+        if (is_compatible_types(type1, type2))
+            break;
+        for (qualwarn = lvl = 0;; ++lvl) {
+            if (((type2->t & VT_CONSTANT) && !(type1->t & VT_CONSTANT)) ||
+                ((type2->t & VT_VOLATILE) && !(type1->t & VT_VOLATILE)))
+                qualwarn = 1;
+            dbt = type1->t & (VT_BTYPE|VT_LONG);
+            sbt = type2->t & (VT_BTYPE|VT_LONG);
+            if (dbt != VT_PTR || sbt != VT_PTR)
+                break;
+            type1 = pointed_type(type1);
+            type2 = pointed_type(type2);
+        }
+        if (!is_compatible_unqualified_types(type1, type2)) {
+            if ((dbt == VT_VOID || sbt == VT_VOID) && lvl == 0) {
+                /* void * can match anything */
+            } else if (dbt == sbt
+                && is_integer_btype(sbt & VT_BTYPE)
+                && IS_ENUM(type1->t) + IS_ENUM(type2->t)
+                    + !!((type1->t ^ type2->t) & VT_UNSIGNED) < 2) {
 		/* Like GCC don't warn by default for merely changes
 		   in pointer target signedness.  Do warn for different
 		   base types, though, in particular for unsigned enums
 		   and signed int targets.  */
-		if ((type1->t & (VT_BTYPE|VT_LONG)) != (type2->t & (VT_BTYPE|VT_LONG))
-                    || IS_ENUM(type1->t) || IS_ENUM(type2->t)
-                    )
-		    tcc_warning("assignment from incompatible pointer type");
-	    }
+            } else {
+                tcc_warning("assignment from incompatible pointer type");
+                break;
+            }
         }
-        /* check const and volatile */
-        if ((!(type1->t & VT_CONSTANT) && (type2->t & VT_CONSTANT)) ||
-            (!(type1->t & VT_VOLATILE) && (type2->t & VT_VOLATILE)))
+        if (qualwarn)
             tcc_warning("assignment discards qualifiers from pointer target type");
         break;
     case VT_BYTE:
@@ -3061,7 +3072,6 @@ static void gen_assign_cast(CType *dt)
         }
         break;
     }
- type_ok:
     gen_cast(dt);
 }
 
@@ -4284,7 +4294,6 @@ static int post_type(CType *type, AttributeDef *ad, int storage, int td)
                     type_decl(&pt, &ad1, &n, TYPE_DIRECT | TYPE_ABSTRACT);
                     if ((pt.t & VT_BTYPE) == VT_VOID)
                         tcc_error("parameter declared as void");
-                    arg_size += (type_size(&pt, &align) + PTR_SIZE - 1) / PTR_SIZE;
                 } else {
                     n = tok;
                     if (n < TOK_UIDENT)
@@ -4293,6 +4302,7 @@ static int post_type(CType *type, AttributeDef *ad, int storage, int td)
                     next();
                 }
                 convert_parameter_type(&pt);
+                arg_size += (type_size(&pt, &align) + PTR_SIZE - 1) / PTR_SIZE;
                 s = sym_push(n | SYM_FIELD, &pt, 0, 0);
                 *plast = s;
                 plast = &s->next;
@@ -4335,8 +4345,23 @@ static int post_type(CType *type, AttributeDef *ad, int storage, int td)
 	int saved_nocode_wanted = nocode_wanted;
         /* array definition */
         next();
-        if (tok == TOK_RESTRICT1)
-            next();
+	while (1) {
+	    /* XXX The optional type-quals and static should only be accepted
+	       in parameter decls.  The '*' as well, and then even only
+	       in prototypes (not function defs).  */
+	    switch (tok) {
+	    case TOK_RESTRICT1: case TOK_RESTRICT2: case TOK_RESTRICT3:
+	    case TOK_CONST1:
+	    case TOK_VOLATILE1:
+	    case TOK_STATIC:
+	    case '*':
+		next();
+		continue;
+	    default:
+		break;
+	    }
+	    break;
+	}
         n = -1;
         t1 = 0;
         if (tok != ']') {
@@ -5000,6 +5025,8 @@ ST_FUNC void unary(void)
 	skip('(');
 	expr_type(&controlling_type, expr_eq);
 	controlling_type.t &= ~(VT_CONSTANT | VT_VOLATILE | VT_ARRAY);
+	if ((controlling_type.t & VT_BTYPE) == VT_FUNC)
+	  mk_pointer(&controlling_type);
 	for (;;) {
 	    learn = 0;
 	    skip(',');
@@ -5051,17 +5078,18 @@ ST_FUNC void unary(void)
     }
     // special qnan , snan and infinity values
     case TOK___NAN__:
-        vpush64(VT_DOUBLE, 0x7ff8000000000000ULL);
+        n = 0x7fc00000;
+special_math_val:
+	vpushi(n);
+	vtop->type.t = VT_FLOAT;
         next();
         break;
     case TOK___SNAN__:
-        vpush64(VT_DOUBLE, 0x7ff0000000000001ULL);
-        next();
-        break;
+	n = 0x7f800001;
+	goto special_math_val;
     case TOK___INF__:
-        vpush64(VT_DOUBLE, 0x7ff0000000000000ULL);
-        next();
-        break;
+	n = 0x7f800000;
+	goto special_math_val;
 
     default:
     tok_identifier:
@@ -6086,6 +6114,8 @@ static void block(int *bsym, int *csym, int is_expr)
         skip(TOK_WHILE);
         skip('(');
         gsym(b);
+	if (b)
+	    nocode_wanted = saved_nocode_wanted;
 	gexpr();
 	c = gvtst(0, 0);
 	gsym_addr(c, d);
@@ -6826,11 +6856,16 @@ static void decl_initializer_alloc(CType *type, AttributeDef *ad, int r,
     Sym *sym = NULL;
     int saved_nocode_wanted = nocode_wanted;
 #ifdef CONFIG_TCC_BCHECK
-    int bcheck = tcc_state->do_bounds_check && !NODATA_WANTED;
+    int bcheck;
 #endif
 
-    if (type->t & VT_STATIC)
-        nocode_wanted |= NODATA_WANTED ? 0x40000000 : 0x80000000;
+    /* Always allocate static or global variables */
+    if (v && (r & VT_VALMASK) == VT_CONST)
+        nocode_wanted |= 0x80000000;
+
+#ifdef CONFIG_TCC_BCHECK
+    bcheck = tcc_state->do_bounds_check && !NODATA_WANTED;
+#endif
 
     flexible_array = NULL;
     if ((type->t & VT_BTYPE) == VT_STRUCT) {
@@ -6896,7 +6931,7 @@ static void decl_initializer_alloc(CType *type, AttributeDef *ad, int r,
         align = 1;
     }
 
-    if (NODATA_WANTED)
+    if (!v && NODATA_WANTED)
         size = 0, align = 1;
 
     if ((r & VT_VALMASK) == VT_LOCAL) {
@@ -7055,6 +7090,11 @@ static void gen_function(Sym *sym)
 {
     nocode_wanted = 0;
     ind = cur_text_section->data_offset;
+    if (sym->a.aligned) {
+	size_t newoff = section_add(cur_text_section, 0,
+				    1 << (sym->a.aligned - 1));
+	gen_fill_nops(newoff - ind);
+    }
     /* NOTE: we patch the symbol size later */
     put_extern_sym(sym, cur_text_section, ind, 0);
     funcname = get_tok_str(sym->v, NULL);

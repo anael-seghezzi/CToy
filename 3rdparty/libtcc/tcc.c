@@ -62,7 +62,7 @@ static const char help[] =
     "  -bt N       show N callers in stack traces\n"
 #endif
     "Misc. options:\n"
-    "  -x[c|a|n]   specify type of the next infile\n"
+    "  -x[c|a|b|n] specify type of the next infile (C,ASM,BIN,NONE)\n"
     "  -nostdinc   do not use standard system include paths\n"
     "  -nostdlib   do not link with standard crt and libraries\n"
     "  -Bdir       set tcc's private include/library dir\n"
@@ -182,8 +182,10 @@ static void print_search_dirs(TCCState *s)
     /* print_dirs("programs", NULL, 0); */
     print_dirs("include", s->sysinclude_paths, s->nb_sysinclude_paths);
     print_dirs("libraries", s->library_paths, s->nb_library_paths);
+#ifdef TCC_TARGET_PE
+    printf("libtcc1:\n  %s/lib/"TCC_LIBTCC1"\n", s->tcc_lib_path);
+#else
     printf("libtcc1:\n  %s/"TCC_LIBTCC1"\n", s->tcc_lib_path);
-#ifndef TCC_TARGET_PE
     print_dirs("crt", s->crt_paths, s->nb_crt_paths);
     printf("elfinterp:\n  %s\n",  DEFAULT_ELFINTERP(s));
 #endif
@@ -298,8 +300,10 @@ redo:
             if (n > 1 && s->outfile)
                 tcc_error("cannot specify output file with -c many files");
         } else {
-            if (s->option_pthread)
+            if (s->option_pthread) {
                 tcc_set_options(s, "-lpthread");
+		n = s->nb_files;
+	    }
         }
 
         if (s->do_bench)
@@ -320,8 +324,7 @@ redo:
     for (first_file = NULL, ret = 0;;) {
         struct filespec *f = s->files[s->nb_files - n];
         s->filetype = f->type;
-        s->alacarte_link = f->alacarte;
-        if (f->type == AFF_TYPE_LIB) {
+        if (f->type & AFF_TYPE_LIB) {
             if (tcc_add_library_err(s, f->name) < 0)
                 ret = 1;
         } else {
@@ -332,8 +335,6 @@ redo:
             if (tcc_add_file(s, f->name) < 0)
                 ret = 1;
         }
-        s->filetype = 0;
-        s->alacarte_link = 1;
         if (--n == 0 || ret
             || (s->output_type == TCC_OUTPUT_OBJ && !s->option_r))
             break;
