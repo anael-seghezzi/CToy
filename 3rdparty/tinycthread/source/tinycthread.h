@@ -483,7 +483,8 @@ int tss_set(tss_t key, void *val);
     CRITICAL_SECTION lock;
   } once_flag;
   #define ONCE_FLAG_INIT {0,}
-#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) && \
+      !(defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 28))) 
   #define once_flag pthread_once_t
   #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #endif
@@ -495,7 +496,8 @@ int tss_set(tss_t key, void *val);
  */
 #if defined(_TTHREAD_WIN32_)
   void call_once(once_flag *flag, void (*func)(void));
-#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) && \
+      !(defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 28)))
   #define call_once(flag,func) pthread_once(flag,func)
 #endif
 
