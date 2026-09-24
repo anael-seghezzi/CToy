@@ -428,6 +428,8 @@ void ctoy__glfw_symbols(void)
    tcc_add_symbol(ctoy__tcc, "glfwCreateStandardCursor", glfwCreateStandardCursor);
    tcc_add_symbol(ctoy__tcc, "glfwCreateCursor", glfwCreateCursor);
    tcc_add_symbol(ctoy__tcc, "glfwSetCursor", glfwSetCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwGetTime", glfwGetTime);
+   tcc_add_symbol(ctoy__tcc, "glfwSetTime", glfwSetTime);
 }
 
 void ctoy__all_symbols(void)
