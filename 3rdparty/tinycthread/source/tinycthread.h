@@ -1,6 +1,6 @@
 /* -*- mode: c; tab-width: 2; indent-tabs-mode: nil; -*-
 Copyright (c) 2012 Marcus Geelnard
-Copyright (c) 2013-2014 Evan Nemerson
+Copyright (c) 2013-2016 Evan Nemerson
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -20,6 +20,8 @@ freely, subject to the following restrictions:
 
     3. This notice may not be removed or altered from any source
     distribution.
+
+SPDX-License-Identifier: Zlib
 */
 
 #ifndef _TINYCTHREAD_H_
@@ -52,15 +54,26 @@ extern "C" {
 * tinycthread.h.
 */
 
+#ifdef _WIN32
+#   define NOGDI
+# elif !defined(__USE_UNIX98)
+#   define __USE_UNIX98
+#endif
+
 /* Which platform are we on? */
 #if !defined(_TTHREAD_PLATFORM_DEFINED_)
   #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
     #define _TTHREAD_WIN32_
+  #elif defined(__DREAMCAST__) || defined(__GAMECUBE__) || defined(TINYCTHREAD_FORCE_C11)
+    #define _TTHREAD_CTHREADS_
+    #include <threads.h>
   #else
     #define _TTHREAD_POSIX_
   #endif
   #define _TTHREAD_PLATFORM_DEFINED_
 #endif
+
+#ifndef _TTHREAD_CTHREADS_
 
 /* Activate some POSIX functionality (e.g. clock_gettime and recursive mutexes) */
 #if defined(_TTHREAD_POSIX_)
@@ -76,13 +89,16 @@ extern "C" {
     #undef _XOPEN_SOURCE
     #define _XOPEN_SOURCE 500
   #endif
+  #define _XPG6
 #endif
 
 /* Generic includes */
 #include <time.h>
+#include <stdlib.h>
 
 /* Platform specific includes */
 #if defined(_TTHREAD_POSIX_)
+  #include <sys/types.h>
   #include <pthread.h>
 #elif defined(_TTHREAD_WIN32_)
   #ifndef WIN32_LEAN_AND_MEAN
@@ -93,6 +109,10 @@ extern "C" {
   #ifdef __UNDEF_LEAN_AND_MEAN
     #undef WIN32_LEAN_AND_MEAN
     #undef __UNDEF_LEAN_AND_MEAN
+  #endif
+  #ifdef __MINGW32__
+    /* MinGW has no _ftime_s symbol */
+    #define _ftime_s _ftime
   #endif
 #endif
 
@@ -159,6 +179,8 @@ int _tthread_timespec_get(struct timespec *ts, int base);
  #define _Thread_local __thread
 #endif
 
+#define thread_local _Thread_local
+
 /* Macros */
 #if defined(_TTHREAD_WIN32_)
 #define TSS_DTOR_ITERATIONS (4)
@@ -167,16 +189,22 @@ int _tthread_timespec_get(struct timespec *ts, int base);
 #endif
 
 /* Function return values */
-#define thrd_error    0 /**< The requested operation failed */
-#define thrd_success  1 /**< The requested operation succeeded */
-#define thrd_timedout 2 /**< The time specified in the call was reached without acquiring the requested resource */
-#define thrd_busy     3 /**< The requested operation failed because a tesource requested by a test and return function is already in use */
-#define thrd_nomem    4 /**< The requested operation failed because it was unable to allocate memory */
+enum
+{
+  thrd_success  = 0, /**< The requested operation succeeded */
+  thrd_busy     = 1, /**< The requested operation failed because a resource requested by a test and return function is already in use */
+  thrd_error    = 2, /**< The requested operation failed */
+  thrd_nomem    = 3, /**< The requested operation failed because it was unable to allocate memory */
+  thrd_timedout = 4  /**< The time specified in the call was reached without acquiring the requested resource */
+};
 
 /* Mutex types */
-#define mtx_plain     0
-#define mtx_timed     1
-#define mtx_recursive 2
+enum
+{
+  mtx_plain     = 0,
+  mtx_recursive = 1,
+  mtx_timed     = 2
+};
 
 /* Mutex */
 #if defined(_TTHREAD_WIN32_)
@@ -220,7 +248,14 @@ void mtx_destroy(mtx_t *mtx);
 */
 int mtx_lock(mtx_t *mtx);
 
-/** NOT YET IMPLEMENTED.
+/** Lock the given mutex, or block until a specific point in time.
+* Blocks until either the given mutex can be locked, or the specified TIME_UTC
+* based time.
+* @param mtx A mutex object.
+* @param ts A UTC based calendar time
+* @return @ref The mtx_timedlock function returns thrd_success on success, or
+* thrd_timedout if the time specified was reached without acquiring the
+* requested resource, or thrd_error if the request could not be honored.
 */
 int mtx_timedlock(mtx_t *mtx, const struct timespec *ts);
 
@@ -448,7 +483,8 @@ int tss_set(tss_t key, void *val);
     CRITICAL_SECTION lock;
   } once_flag;
   #define ONCE_FLAG_INIT {0,}
-#else
+#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) && \
+      !(defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 28))) 
   #define once_flag pthread_once_t
   #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #endif
@@ -460,12 +496,15 @@ int tss_set(tss_t key, void *val);
  */
 #if defined(_TTHREAD_WIN32_)
   void call_once(once_flag *flag, void (*func)(void));
-#else
+#elif !(defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) && \
+      !(defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 28)))
   #define call_once(flag,func) pthread_once(flag,func)
 #endif
 
+#endif
+
 #ifdef __cplusplus
-}
+  }
 #endif
 
 #endif /* _TINYTHREAD_H_ */
