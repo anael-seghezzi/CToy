@@ -63,8 +63,10 @@ int ctoy__io_open(const char *filename, int access, ...)
    va_list args;
    va_start(args, access);
 
+   // Modified: only track source paths that fit the watcher buffer.
    // custom io (tcc HACK to get the list of active src files)
-   if (strncmp(filename, "src", 3) == 0 && ctoy__src_count < CTOY_MAX_SRC) {
+   if (strncmp(filename, "src", 3) == 0 && ctoy__src_count < CTOY_MAX_SRC &&
+       strlen(filename) < sizeof(ctoy__src_path[0])) {
       strcpy(ctoy__src_path[ctoy__src_count], filename);
       ctoy__src_count++;
    }
