@@ -1,5 +1,4 @@
 project(tcc C)
-cmake_minimum_required(VERSION 2.6)
 
 set(BUILD_SHARED_LIBS ON)
 
@@ -227,4 +226,3 @@ make_tcc("" c67 TCC_BUILD_C67
   "c67-gen.c;tcccoff.c"
   "" "" ""
 )
-
