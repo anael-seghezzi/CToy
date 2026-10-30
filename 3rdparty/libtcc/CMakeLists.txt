@@ -11,6 +11,8 @@ if(WIN32)
   else()
     set(TCC_NATIVE_TARGET "Win32")
   endif()
+elseif(APPLE)
+	set(TCC_NATIVE_TARGET "x86_64-osx")
 else()
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set(TCC_NATIVE_TARGET "ARM")
@@ -192,6 +194,11 @@ make_tcc("i386" i386-linux-gnu TCC_BUILD_I386
 )
 make_tcc("x86_64" x86_64-linux-gnu TCC_BUILD_X64
   TCC_TARGET_X86_64
+  "${X86_64_SOURCES}"
+  "" "lib/alloca86_64.S;lib/alloca86_64-bt.S;lib/va_list.c" ""
+)
+make_tcc("x86_64-osx" x86_64-osx TCC_BUILD_X64
+  "TCC_TARGET_X86_64;TCC_TARGET_MACHO"
   "${X86_64_SOURCES}"
   "" "lib/alloca86_64.S;lib/alloca86_64-bt.S;lib/va_list.c" ""
 )
