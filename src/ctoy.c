@@ -1,6 +1,6 @@
 /*======================================================================
  CTOY
- version 1.0
+ version 1.1
 ------------------------------------------------------------------------
  Copyright (c) 2015 Anael Seghezzi <www.maratis3d.com>
 
@@ -87,7 +87,6 @@
 #undef M_PF_IMPLEMENTATION
 
 /* system */
-char           ctoy__title[256];
 struct m_image ctoy__buffer_ubyte = M_IMAGE_IDENTITY();
 unsigned long  ctoy__t = 0;
 void *         ctoy__memory = NULL;
@@ -182,7 +181,7 @@ static void ctoy__cursorpos_callback(GLFWwindow * window, double x, double y)
    ctoy__mouse_y = (float)y / (float)ctoy__win_height;
 }
 
-void ctoy__scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+static void ctoy__scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
    ctoy__scroll_x += (float)xoffset / (float)ctoy__win_width;
    ctoy__scroll_y += (float)yoffset / (float)ctoy__win_height;
@@ -316,7 +315,6 @@ static int ctoy__window_init(const char *title, int fullscreen)
       glfwDestroyWindow(ctoy__window);
 
    ctoy__window = win;
-   sprintf(ctoy__title, "%s", title);
    
    glfwSetWindowCloseCallback(ctoy__window, ctoy__close_callback);
    glfwSetWindowSizeCallback(ctoy__window, ctoy__size_callback);
@@ -570,6 +568,11 @@ int ctoy_joystick_present(int joy)
    return glfwJoystickPresent(joy);
 }
 
+const char* ctoy_joystick_name(int joy)
+{
+   return glfwGetJoystickName(joy);
+}
+
 int ctoy_joystick_axis_count(int joy)
 {
    return ctoy__joystick_axis_count[joy];
@@ -644,7 +647,6 @@ double ctoy_get_time(void)
 void ctoy_window_title(const char *title)
 {
    glfwSetWindowTitle(ctoy__window, title);
-   sprintf(ctoy__title, "%s", title);
 }
 
 void ctoy_window_size(int width, int height)
@@ -760,10 +762,42 @@ void ctoy_sleep(long sec, long nsec)
 
 int ctoy_argc(void)
 {
-    return ctoy__argc;
+   return ctoy__argc;
 }
 
 char **ctoy_argv(void)
 {
-    return ctoy__argv;
+   return ctoy__argv;
+}
+
+struct ctoy__stat {
+   unsigned int   dev;
+   unsigned short ino;
+   unsigned short mode;
+   short          nlink;
+   short          uid;
+   short          gid;
+   unsigned int   rdev;
+   long           size;
+   int64_t        atime;
+   int64_t        mtime;
+   int64_t        ctime;
+};
+
+int ctoy__stat(const char *filename, struct ctoy__stat *s)
+{
+   struct stat buffer;
+   int ret = stat(filename, &buffer);
+   s->dev = buffer.st_dev;
+   s->ino = buffer.st_ino;
+   s->mode = buffer.st_mode;
+   s->nlink = buffer.st_nlink;
+   s->uid = buffer.st_uid;
+   s->gid = buffer.st_gid;
+   s->rdev = buffer.st_rdev;
+   s->size = buffer.st_size;
+   s->atime = buffer.st_atime;
+   s->mtime = buffer.st_mtime;
+   s->ctime = buffer.st_ctime;
+   return ret;
 }

@@ -139,7 +139,7 @@ if (BUILD_SHARED_LIBS)
         target_compile_options(glfw PRIVATE "-fno-common")
 
         set_target_properties(glfw PROPERTIES
-                              INSTALL_NAME_DIR "${CMAKE_INSTALL_LIBDIR}")
+                              INSTALL_NAME_DIR "@rpath")
     elseif (UNIX)
         # Hide symbols not explicitly tagged for export from the shared library
         target_compile_options(glfw PRIVATE "-fvisibility=hidden")
@@ -147,6 +147,8 @@ if (BUILD_SHARED_LIBS)
 
     target_compile_definitions(glfw INTERFACE GLFW_DLL)
     target_link_libraries(glfw PRIVATE ${glfw_LIBRARIES})
+	
+	install(TARGETS glfw DESTINATION ${MTCL_INSTALL_DIR})
 else()
     target_link_libraries(glfw INTERFACE ${glfw_LIBRARIES})
 endif()
@@ -154,12 +156,3 @@ endif()
 if (MSVC)
     target_compile_definitions(glfw PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
-
-if (GLFW_INSTALL)
-    install(TARGETS glfw
-            EXPORT glfwTargets
-            RUNTIME DESTINATION "bin"
-            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-endif()
-

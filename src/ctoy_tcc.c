@@ -1,26 +1,26 @@
 /*======================================================================
-    Maratis Tiny C Library
-    version 1.0
+ CTOY
+ version 1.1
 ------------------------------------------------------------------------
-    Copyright (c) 2015 Anael Seghezzi <www.maratis3d.com>
+ Copyright (c) 2015 Anael Seghezzi <www.maratis3d.com>
 
-    This software is provided 'as-is', without any express or implied
-    warranty. In no event will the authors be held liable for any damages
-    arising from the use of this software.
+ This software is provided 'as-is', without any express or implied
+ warranty. In no event will the authors be held liable for any damages
+ arising from the use of this software.
 
-    Permission is granted to anyone to use this software for any purpose,
-    including commercial applications, and to alter it and redistribute it
-    freely, subject to the following restrictions:
+ Permission is granted to anyone to use this software for any purpose,
+ including commercial applications, and to alter it and redistribute it
+ freely, subject to the following restrictions:
 
-    1. The origin of this software must not be misrepresented; you must not
+ 1. The origin of this software must not be misrepresented; you must not
     claim that you wrote the original software. If you use this software
     in a product, an acknowledgment in the product documentation would
     be appreciated but is not required.
 
-    2. Altered source versions must be plainly marked as such, and must not
+ 2. Altered source versions must be plainly marked as such, and must not
     be misrepresented as being the original software.
 
-    3. This notice may not be removed or altered from any source
+ 3. This notice may not be removed or altered from any source
     distribution.
 
 ========================================================================*/
@@ -44,7 +44,7 @@ void (*ctoy_main_loop)(void);
 void (*ctoy_end)(void);
 
 /* system */
-static char ctoy__dir[256];
+static char *ctoy__dir = NULL;
 TCCState *  ctoy__tcc;
 int         ctoy__src_update = 0;
 int         ctoy__src_state = 0;
@@ -52,11 +52,18 @@ int         ctoy__src_state = 0;
 #ifndef CTOY_PLAYER
 /* dynamic refresh */
 #define CTOY_MAX_SRC 256
-char    ctoy__src_path[CTOY_MAX_SRC][256];
+char    *ctoy__src_path[CTOY_MAX_SRC] = {0};
 long    ctoy__src_t[CTOY_MAX_SRC];
 int     ctoy__src_count = 0;
 thrd_t  ctoy__src_thread_id = 0;
 int     ctoy__src_thread_run = 1;
+
+inline static char *str_copy(const char *str)
+{
+    char *cpy = (char *)malloc(strlen(str) + 1);
+    if (cpy) strcpy(cpy, str);
+    return cpy;
+}
 
 int ctoy__io_open(const char *filename, int access, ...)
 {
@@ -65,8 +72,11 @@ int ctoy__io_open(const char *filename, int access, ...)
 
    // custom io (tcc HACK to get the list of active src files)
    if (strncmp(filename, "src", 3) == 0 && ctoy__src_count < CTOY_MAX_SRC) {
-      strcpy(ctoy__src_path[ctoy__src_count], filename);
-      ctoy__src_count++;
+      if (ctoy__src_path[ctoy__src_count])
+         free(ctoy__src_path[ctoy__src_count]);
+      ctoy__src_path[ctoy__src_count] = str_copy(filename);
+      if (ctoy__src_path[ctoy__src_count])
+         ctoy__src_count++;
    }
 
    return open(filename, access, args);
@@ -87,7 +97,7 @@ int ctoy__io_close(int fh)
    return close(fh);
 }
 
-void ctoy__io_replace(void)
+static void ctoy__io_replace(void)
 {
    tcc_set_io_open(ctoy__io_open);
    tcc_set_io_read(ctoy__io_read);
@@ -95,7 +105,7 @@ void ctoy__io_replace(void)
    tcc_set_io_close(ctoy__io_close);
 }
 
-long ctoy__file_t(const char *filename)
+static long ctoy__file_t(const char *filename)
 {
    struct stat buffer;
    if (stat(filename, &buffer) == 0)
@@ -103,7 +113,7 @@ long ctoy__file_t(const char *filename)
    return 0;
 }
 
-int ctoy__src_thread(void * data)
+static int ctoy__src_thread(void * data)
 {
    struct timespec t; int i;
    t.tv_sec = 0;
@@ -126,7 +136,7 @@ int ctoy__src_thread(void * data)
     return 0;
 }
 
-int ctoy__src_thread_init(void)
+static int ctoy__src_thread_init(void)
 {
    ctoy__src_thread_run = 1;
    if (thrd_create(&ctoy__src_thread_id, ctoy__src_thread, NULL) != thrd_success)
@@ -134,13 +144,13 @@ int ctoy__src_thread_init(void)
    return 1;
 }
 
-void ctoy__src_thread_destroy(void)
+static void ctoy__src_thread_destroy(void)
 {
    ctoy__src_thread_run = 0;
    thrd_join(ctoy__src_thread_id, NULL);
 }
 
-void ctoy__src_thread_restart(void)
+static void ctoy__src_thread_restart(void)
 {
    int i;
    if (ctoy__src_thread_id != 0)
@@ -153,7 +163,7 @@ void ctoy__src_thread_restart(void)
 #endif /* /ifndef CTOY_PLAYER */
 
 
-int ctoy__is_directory(const char * filename)
+static int ctoy__is_directory(const char * filename)
 {
     DIR *pdir = opendir(filename);
    if(! pdir)
@@ -162,7 +172,7 @@ int ctoy__is_directory(const char * filename)
    return 1;
 }
 
-void ctoy__system_symbols(void)
+static void ctoy__system_symbols(void)
 {
 #ifdef WIN32
    /* dirent port */
@@ -173,7 +183,7 @@ void ctoy__system_symbols(void)
 #endif
 }
 
-void ctoy__gles2_symbols(void)
+static void ctoy__gles2_symbols(void)
 {
    static const char *sym[142] = {
    "glActiveTexture", "glAttachShader", "glBindAttribLocation", "glBindBuffer", "glBindFramebuffer", "glBindRenderbuffer", "glBindTexture", "glBlendColor",
@@ -202,7 +212,7 @@ void ctoy__gles2_symbols(void)
    }
 }
 
-void ctoy__symbols(void)
+static void ctoy__symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "ctoy_t", ctoy_t);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_width", ctoy_window_width);
@@ -224,6 +234,7 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_button_pressed", ctoy_mouse_button_pressed);
 
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_present", ctoy_joystick_present);
+   tcc_add_symbol(ctoy__tcc, "ctoy_joystick_name", ctoy_joystick_name);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_axis_count", ctoy_joystick_axis_count);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_button_count", ctoy_joystick_button_count);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_button_press", ctoy_joystick_button_press);
@@ -243,6 +254,8 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_argc", ctoy_argc);
    tcc_add_symbol(ctoy__tcc, "ctoy_argv", ctoy_argv);
 
+   tcc_add_symbol(ctoy__tcc, "ctoy__stat", ctoy__stat);
+   
    tcc_add_symbol(ctoy__tcc, "exp2", exp2);
 
    tcc_add_symbol(ctoy__tcc, "thrd_create", thrd_create);
@@ -250,7 +263,7 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "thrd_yield", thrd_yield);
 }
 
-void ctoy__maratis_symbols(void)
+static void ctoy__maratis_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "m_srand", m_srand);
    tcc_add_symbol(ctoy__tcc, "m_rand", m_rand);
@@ -389,7 +402,7 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_pf_backtrace", m_pf_backtrace);
 }
 
-void ctoy__tcc_symbols(void)
+static void ctoy__tcc_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "tcc_new", tcc_new);
    tcc_add_symbol(ctoy__tcc, "tcc_delete", tcc_delete);
@@ -412,7 +425,7 @@ void ctoy__tcc_symbols(void)
    tcc_add_symbol(ctoy__tcc, "tcc_get_symbol", tcc_get_symbol);
 }
 
-void ctoy__glfw_symbols(void)
+static void ctoy__glfw_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "ctoy__get_glfw_window", ctoy__get_glfw_window);
    tcc_add_symbol(ctoy__tcc, "glfwGetClipboardString", glfwGetClipboardString);
@@ -424,10 +437,13 @@ void ctoy__glfw_symbols(void)
    tcc_add_symbol(ctoy__tcc, "glfwGetInputMode", glfwGetInputMode);
    tcc_add_symbol(ctoy__tcc, "glfwSetInputMode", glfwSetInputMode);
    tcc_add_symbol(ctoy__tcc, "glfwCreateStandardCursor", glfwCreateStandardCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwCreateCursor", glfwCreateCursor);
    tcc_add_symbol(ctoy__tcc, "glfwSetCursor", glfwSetCursor);
+   tcc_add_symbol(ctoy__tcc, "glfwGetTime", glfwGetTime);
+   tcc_add_symbol(ctoy__tcc, "glfwSetTime", glfwSetTime);
 }
 
-void ctoy__all_symbols(void)
+static void ctoy__all_symbols(void)
 {
    ctoy__system_symbols();
    ctoy__gles2_symbols();
@@ -437,27 +453,27 @@ void ctoy__all_symbols(void)
    ctoy__glfw_symbols();
 }
 
-void ctoy__add_libs(void)
+static void ctoy__add_libs(void)
 {
-   char filename[256];
+   char filename[256+4];
    DIR *pdir = opendir("lib");
    if (pdir) {
 
       struct dirent *pent = NULL;
       while ((pent = readdir(pdir))) {
          
-         if (pent->d_name[0] == '.')
+         if (pent->d_name[0] == '.' || strlen(pent->d_name) >= 256)
             continue;
 
          sprintf(filename, "lib/%s", pent->d_name);
          if (! ctoy__is_directory(filename)) {
 #ifdef WIN32
             LoadLibrary(filename);
-            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
+            tcc_add_file(ctoy__tcc, filename);
 #else
             dlopen(filename, RTLD_LAZY);
 	#ifndef __APPLE__
-            tcc_add_file(ctoy__tcc, filename, TCC_FILETYPE_BINARY);
+            tcc_add_file(ctoy__tcc, filename);
 	#endif
 #endif
          }
@@ -467,10 +483,8 @@ void ctoy__add_libs(void)
    }
 }
 
-int ctoy__tcc_init(void)
+static int ctoy__tcc_init(void)
 {
-   char path[256];
-
 #ifndef CTOY_PLAYER
    ctoy__src_count = 0;
 #endif
@@ -484,18 +498,24 @@ int ctoy__tcc_init(void)
    ctoy__io_replace();
 #endif
 
-   /* search path */
-   tcc_set_lib_path(ctoy__tcc, ".");
-   tcc_add_library_path(ctoy__tcc, ctoy__dir);
+   char *path = (char *)malloc(sizeof(char) * (256 + strlen(ctoy__dir)));
+   if (path) {
 
-   sprintf(path, "%s/include", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       /* search path */
+       tcc_set_lib_path(ctoy__tcc, ".");
+       tcc_add_library_path(ctoy__tcc, ctoy__dir);
+
+       sprintf(path, "%s/include", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
    
-   sprintf(path, "%s/include/libc", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       sprintf(path, "%s/include/libc", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
 
-   sprintf(path, "%s/include/libc/winapi", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       sprintf(path, "%s/include/libc/winapi", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
+
+       free(path);
+   }
    
    /* compilation */
    tcc_set_output_type(ctoy__tcc, TCC_OUTPUT_MEMORY);
@@ -508,7 +528,7 @@ int ctoy__tcc_init(void)
    ctoy__add_libs();
 
    /* main.c */
-   if (tcc_add_file(ctoy__tcc, "src/main.c", TCC_FILETYPE_C) == -1)
+   if (tcc_add_file(ctoy__tcc, "src/main.c") == -1)
         return 0;
 
    /* symbols */
@@ -528,7 +548,7 @@ int ctoy__tcc_init(void)
    return 1;
 }
 
-void ctoy__main_loop(void)
+static void ctoy__main_loop(void)
 {
    if (ctoy__src_state) ctoy_main_loop();
    ctoy__update();
@@ -548,20 +568,23 @@ void ctoy__main_loop(void)
 
 int main(int argc, char **argv)
 {
-   int i, sz;
-   
    ctoy__argc = argc;
    ctoy__argv = argv;
 
 #ifdef __linux__
    {
-   	char tmp[256];
-      readlink( "/proc/self/exe", tmp, 256);
+      char tmp[2048];
+      readlink( "/proc/self/exe", tmp, 2048);
+      ctoy__dir = (char *)calloc(2048, sizeof(char));
+      if (!ctoy__dir) return EXIT_FAILURE;
       ctoy__get_directory(ctoy__dir, tmp);
    }
 #else
+   ctoy__dir = (char *)calloc(1 + strlen(argv[0]), sizeof(char));
+   if (!ctoy__dir) return EXIT_FAILURE;
    ctoy__get_directory(ctoy__dir, argv[0]);
 #endif
+
    ctoy__set_working_dir(ctoy__dir);
 
    /* openal */

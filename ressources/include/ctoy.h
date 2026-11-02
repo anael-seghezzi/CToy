@@ -1,6 +1,6 @@
 /*======================================================================
  CTOY
- version 1.0
+ version 1.1
 ------------------------------------------------------------------------
  Copyright (c) 2015 Anael Seghezzi <www.maratis3d.com>
 
@@ -43,11 +43,11 @@
 #define CTOY_PEN_DATA_MAX 256 // maximum pen tablet data per update
 
 /* threads */
-#define thrd_error    0
-#define thrd_success  1
-#define thrd_timedout 2
-#define thrd_busy     3
-#define thrd_nomem    4
+#define thrd_success  0
+#define thrd_busy     1
+#define thrd_error    2
+#define thrd_nomem    3
+#define thrd_timedout 4
 typedef void* thrd_t;
 typedef int (*thrd_start_t)(void *arg);
 int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
@@ -104,6 +104,7 @@ int ctoy_joystick_button_press(int joy, int button); // return 1 on joystick-but
 int ctoy_joystick_button_release(int joy, int button); // return 1 on joystick-button release, or return 0
 int ctoy_joystick_button_pressed(int joy, int button); // return 1 if joystick-button is currently pressed, or return 0
 float ctoy_joystick_axis(int joy, int axis); // return joystick axis's value
+const char* ctoy_joystick_name(int joy); // return joystick's name if present, or return NULL
 
 /* pen tablet events */
 struct ctoy_pen_data {float x, y, z, pressure, pitch, yaw, roll;};

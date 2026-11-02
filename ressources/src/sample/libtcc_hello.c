@@ -17,9 +17,10 @@ void ctoy_begin(void)
    printf("<sample libtcc_hello>\n");
 
    s = tcc_new();
-   tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+   
    tcc_set_lib_path(s, ".");
    tcc_add_library_path(s, ".");
+   tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 
    if (tcc_compile_string(s, script) != -1) {
       if (tcc_relocate(s, TCC_RELOCATE_AUTO) >= 0) {
