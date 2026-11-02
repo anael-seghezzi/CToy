@@ -87,7 +87,7 @@ int ctoy__io_close(int fh)
    return close(fh);
 }
 
-void ctoy__io_replace(void)
+static void ctoy__io_replace(void)
 {
    tcc_set_io_open(ctoy__io_open);
    tcc_set_io_read(ctoy__io_read);
@@ -95,7 +95,7 @@ void ctoy__io_replace(void)
    tcc_set_io_close(ctoy__io_close);
 }
 
-long ctoy__file_t(const char *filename)
+static long ctoy__file_t(const char *filename)
 {
    struct stat buffer;
    if (stat(filename, &buffer) == 0)
@@ -103,7 +103,7 @@ long ctoy__file_t(const char *filename)
    return 0;
 }
 
-int ctoy__src_thread(void * data)
+static int ctoy__src_thread(void * data)
 {
    struct timespec t; int i;
    t.tv_sec = 0;
@@ -126,7 +126,7 @@ int ctoy__src_thread(void * data)
     return 0;
 }
 
-int ctoy__src_thread_init(void)
+static int ctoy__src_thread_init(void)
 {
    ctoy__src_thread_run = 1;
    if (thrd_create(&ctoy__src_thread_id, ctoy__src_thread, NULL) != thrd_success)
@@ -134,13 +134,13 @@ int ctoy__src_thread_init(void)
    return 1;
 }
 
-void ctoy__src_thread_destroy(void)
+static void ctoy__src_thread_destroy(void)
 {
    ctoy__src_thread_run = 0;
    thrd_join(ctoy__src_thread_id, NULL);
 }
 
-void ctoy__src_thread_restart(void)
+static void ctoy__src_thread_restart(void)
 {
    int i;
    if (ctoy__src_thread_id != 0)
@@ -153,7 +153,7 @@ void ctoy__src_thread_restart(void)
 #endif /* /ifndef CTOY_PLAYER */
 
 
-int ctoy__is_directory(const char * filename)
+static int ctoy__is_directory(const char * filename)
 {
     DIR *pdir = opendir(filename);
    if(! pdir)
@@ -162,7 +162,7 @@ int ctoy__is_directory(const char * filename)
    return 1;
 }
 
-void ctoy__system_symbols(void)
+static void ctoy__system_symbols(void)
 {
 #ifdef WIN32
    /* dirent port */
@@ -173,7 +173,7 @@ void ctoy__system_symbols(void)
 #endif
 }
 
-void ctoy__gles2_symbols(void)
+static void ctoy__gles2_symbols(void)
 {
    static const char *sym[142] = {
    "glActiveTexture", "glAttachShader", "glBindAttribLocation", "glBindBuffer", "glBindFramebuffer", "glBindRenderbuffer", "glBindTexture", "glBlendColor",
@@ -202,7 +202,7 @@ void ctoy__gles2_symbols(void)
    }
 }
 
-void ctoy__symbols(void)
+static void ctoy__symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "ctoy_t", ctoy_t);
    tcc_add_symbol(ctoy__tcc, "ctoy_window_width", ctoy_window_width);
@@ -253,7 +253,7 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "thrd_yield", thrd_yield);
 }
 
-void ctoy__maratis_symbols(void)
+static void ctoy__maratis_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "m_srand", m_srand);
    tcc_add_symbol(ctoy__tcc, "m_rand", m_rand);
@@ -392,7 +392,7 @@ void ctoy__maratis_symbols(void)
    tcc_add_symbol(ctoy__tcc, "m_pf_backtrace", m_pf_backtrace);
 }
 
-void ctoy__tcc_symbols(void)
+static void ctoy__tcc_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "tcc_new", tcc_new);
    tcc_add_symbol(ctoy__tcc, "tcc_delete", tcc_delete);
@@ -415,7 +415,7 @@ void ctoy__tcc_symbols(void)
    tcc_add_symbol(ctoy__tcc, "tcc_get_symbol", tcc_get_symbol);
 }
 
-void ctoy__glfw_symbols(void)
+static void ctoy__glfw_symbols(void)
 {
    tcc_add_symbol(ctoy__tcc, "ctoy__get_glfw_window", ctoy__get_glfw_window);
    tcc_add_symbol(ctoy__tcc, "glfwGetClipboardString", glfwGetClipboardString);
@@ -433,7 +433,7 @@ void ctoy__glfw_symbols(void)
    tcc_add_symbol(ctoy__tcc, "glfwSetTime", glfwSetTime);
 }
 
-void ctoy__all_symbols(void)
+static void ctoy__all_symbols(void)
 {
    ctoy__system_symbols();
    ctoy__gles2_symbols();
@@ -443,7 +443,7 @@ void ctoy__all_symbols(void)
    ctoy__glfw_symbols();
 }
 
-void ctoy__add_libs(void)
+static void ctoy__add_libs(void)
 {
    char filename[256];
    DIR *pdir = opendir("lib");
@@ -473,7 +473,7 @@ void ctoy__add_libs(void)
    }
 }
 
-int ctoy__tcc_init(void)
+static int ctoy__tcc_init(void)
 {
    char path[256];
 
@@ -534,7 +534,7 @@ int ctoy__tcc_init(void)
    return 1;
 }
 
-void ctoy__main_loop(void)
+static void ctoy__main_loop(void)
 {
    if (ctoy__src_state) ctoy_main_loop();
    ctoy__update();

@@ -182,7 +182,7 @@ static void ctoy__cursorpos_callback(GLFWwindow * window, double x, double y)
    ctoy__mouse_y = (float)y / (float)ctoy__win_height;
 }
 
-void ctoy__scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+static void ctoy__scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
    ctoy__scroll_x += (float)xoffset / (float)ctoy__win_width;
    ctoy__scroll_y += (float)yoffset / (float)ctoy__win_height;
