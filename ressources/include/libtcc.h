@@ -27,7 +27,7 @@ LIBTCCAPI void tcc_set_error_func(TCCState *s, void *error_opaque,
     void (*error_func)(void *opaque, const char *msg));
 
 /* set options as from command line (multiple supported) */
-LIBTCCAPI int tcc_set_options(TCCState *s, const char *str);
+LIBTCCAPI void tcc_set_options(TCCState *s, const char *str);
 
 /*****************************/
 /* preprocessor */
@@ -48,13 +48,7 @@ LIBTCCAPI void tcc_undefine_symbol(TCCState *s, const char *sym);
 /* compiling */
 
 /* add a file (C file, dll, object, library, ld script). Return -1 if error. */
-LIBTCCAPI int tcc_add_file(TCCState *s, const char *filename, int filetype);
-#define TCC_FILETYPE_BINARY 1
-#define TCC_FILETYPE_C      2
-#define TCC_FILETYPE_ASM    3
-#define TCC_FILETYPE_ASM_PP 4
-#define TCC_FILETYPE_AR_WHOLE_OFF 5
-#define TCC_FILETYPE_AR_WHOLE_ON  6
+LIBTCCAPI int tcc_add_file(TCCState *s, const char *filename);
 
 /* compile a string containing a C source. Return -1 if error. */
 LIBTCCAPI int tcc_compile_string(TCCState *s, const char *buf);
