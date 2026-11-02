@@ -82,6 +82,7 @@ int ctoy_joystick_button_press(int joy, int button); // return 1 on joystick-but
 int ctoy_joystick_button_release(int joy, int button); // return 1 on joystick-button release, or return 0
 int ctoy_joystick_button_pressed(int joy, int button); // return 1 if joystick-button is currently pressed, or return 0
 float ctoy_joystick_axis(int joy, int axis); // return joystick axis's value
+const char* ctoy_joystick_name(int joy); // return joystick's name if present, or return NULL
 
 /* pen tablet events */
 struct ctoy_pen_data {float x, y, z, pressure, pitch, yaw, roll;};

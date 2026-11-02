@@ -570,6 +570,11 @@ int ctoy_joystick_present(int joy)
    return glfwJoystickPresent(joy);
 }
 
+const char* ctoy_joystick_name(int joy)
+{
+   return glfwGetJoystickName(joy);
+}
+
 int ctoy_joystick_axis_count(int joy)
 {
    return ctoy__joystick_axis_count[joy];

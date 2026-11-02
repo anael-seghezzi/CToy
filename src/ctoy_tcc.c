@@ -224,6 +224,7 @@ void ctoy__symbols(void)
    tcc_add_symbol(ctoy__tcc, "ctoy_mouse_button_pressed", ctoy_mouse_button_pressed);
 
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_present", ctoy_joystick_present);
+   tcc_add_symbol(ctoy__tcc, "ctoy_joystick_name", ctoy_joystick_name);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_axis_count", ctoy_joystick_axis_count);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_button_count", ctoy_joystick_button_count);
    tcc_add_symbol(ctoy__tcc, "ctoy_joystick_button_press", ctoy_joystick_button_press);
@@ -553,14 +554,12 @@ void ctoy__main_loop(void)
 
 int main(int argc, char **argv)
 {
-   int i, sz;
-   
    ctoy__argc = argc;
    ctoy__argv = argv;
 
 #ifdef __linux__
    {
-   	char tmp[256];
+      char tmp[256];
       readlink( "/proc/self/exe", tmp, 256);
       ctoy__get_directory(ctoy__dir, tmp);
    }
