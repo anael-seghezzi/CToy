@@ -44,7 +44,7 @@ void (*ctoy_main_loop)(void);
 void (*ctoy_end)(void);
 
 /* system */
-static char ctoy__dir[256];
+static char *ctoy__dir = NULL;
 TCCState *  ctoy__tcc;
 int         ctoy__src_update = 0;
 int         ctoy__src_state = 0;
@@ -52,11 +52,18 @@ int         ctoy__src_state = 0;
 #ifndef CTOY_PLAYER
 /* dynamic refresh */
 #define CTOY_MAX_SRC 256
-char    ctoy__src_path[CTOY_MAX_SRC][256];
+char    *ctoy__src_path[CTOY_MAX_SRC] = {0};
 long    ctoy__src_t[CTOY_MAX_SRC];
 int     ctoy__src_count = 0;
 thrd_t  ctoy__src_thread_id = 0;
 int     ctoy__src_thread_run = 1;
+
+inline static char *str_copy(const char *str)
+{
+    char *cpy = (char *)malloc(strlen(str) + 1);
+    if (cpy) strcpy(cpy, str);
+    return cpy;
+}
 
 int ctoy__io_open(const char *filename, int access, ...)
 {
@@ -65,8 +72,11 @@ int ctoy__io_open(const char *filename, int access, ...)
 
    // custom io (tcc HACK to get the list of active src files)
    if (strncmp(filename, "src", 3) == 0 && ctoy__src_count < CTOY_MAX_SRC) {
-      strcpy(ctoy__src_path[ctoy__src_count], filename);
-      ctoy__src_count++;
+      if (ctoy__src_path[ctoy__src_count])
+         free(ctoy__src_path[ctoy__src_count]);
+      ctoy__src_path[ctoy__src_count] = str_copy(filename);
+      if (ctoy__src_path[ctoy__src_count])
+         ctoy__src_count++;
    }
 
    return open(filename, access, args);
@@ -445,14 +455,14 @@ static void ctoy__all_symbols(void)
 
 static void ctoy__add_libs(void)
 {
-   char filename[256];
+   char filename[256+4];
    DIR *pdir = opendir("lib");
    if (pdir) {
 
       struct dirent *pent = NULL;
       while ((pent = readdir(pdir))) {
          
-         if (pent->d_name[0] == '.')
+         if (pent->d_name[0] == '.' || strlen(pent->d_name) >= 256)
             continue;
 
          sprintf(filename, "lib/%s", pent->d_name);
@@ -475,8 +485,6 @@ static void ctoy__add_libs(void)
 
 static int ctoy__tcc_init(void)
 {
-   char path[256];
-
 #ifndef CTOY_PLAYER
    ctoy__src_count = 0;
 #endif
@@ -490,18 +498,24 @@ static int ctoy__tcc_init(void)
    ctoy__io_replace();
 #endif
 
-   /* search path */
-   tcc_set_lib_path(ctoy__tcc, ".");
-   tcc_add_library_path(ctoy__tcc, ctoy__dir);
+   char *path = (char *)malloc(sizeof(char) * (256 + strlen(ctoy__dir)));
+   if (path) {
 
-   sprintf(path, "%s/include", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       /* search path */
+       tcc_set_lib_path(ctoy__tcc, ".");
+       tcc_add_library_path(ctoy__tcc, ctoy__dir);
+
+       sprintf(path, "%s/include", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
    
-   sprintf(path, "%s/include/libc", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       sprintf(path, "%s/include/libc", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
 
-   sprintf(path, "%s/include/libc/winapi", ctoy__dir);
-   tcc_add_include_path(ctoy__tcc, path);
+       sprintf(path, "%s/include/libc/winapi", ctoy__dir);
+       tcc_add_include_path(ctoy__tcc, path);
+
+       free(path);
+   }
    
    /* compilation */
    tcc_set_output_type(ctoy__tcc, TCC_OUTPUT_MEMORY);
@@ -559,13 +573,18 @@ int main(int argc, char **argv)
 
 #ifdef __linux__
    {
-      char tmp[256];
-      readlink( "/proc/self/exe", tmp, 256);
+      char tmp[2048];
+      readlink( "/proc/self/exe", tmp, 2048);
+      ctoy__dir = (char *)calloc(2048, sizeof(char));
+      if (!ctoy__dir) return EXIT_FAILURE;
       ctoy__get_directory(ctoy__dir, tmp);
    }
 #else
+   ctoy__dir = (char *)calloc(1 + strlen(argv[0]), sizeof(char));
+   if (!ctoy__dir) return EXIT_FAILURE;
    ctoy__get_directory(ctoy__dir, argv[0]);
 #endif
+
    ctoy__set_working_dir(ctoy__dir);
 
    /* openal */

@@ -87,7 +87,6 @@
 #undef M_PF_IMPLEMENTATION
 
 /* system */
-char           ctoy__title[256];
 struct m_image ctoy__buffer_ubyte = M_IMAGE_IDENTITY();
 unsigned long  ctoy__t = 0;
 void *         ctoy__memory = NULL;
@@ -316,7 +315,6 @@ static int ctoy__window_init(const char *title, int fullscreen)
       glfwDestroyWindow(ctoy__window);
 
    ctoy__window = win;
-   sprintf(ctoy__title, "%s", title);
    
    glfwSetWindowCloseCallback(ctoy__window, ctoy__close_callback);
    glfwSetWindowSizeCallback(ctoy__window, ctoy__size_callback);
@@ -649,7 +647,6 @@ double ctoy_get_time(void)
 void ctoy_window_title(const char *title)
 {
    glfwSetWindowTitle(ctoy__window, title);
-   sprintf(ctoy__title, "%s", title);
 }
 
 void ctoy_window_size(int width, int height)
