@@ -3,18 +3,18 @@ C-Toy
 
 C-Toy is an interactive C(99) coding environment based on [TCC](http://bellard.org/tcc/).
 
-Small, simple, no bullshit. Write cross-platform C code and see the result immediately. No installation or compiler required, download (<4mb), unzip, run CToy and play. Ready for Windows, MacOSX and Linux. Ideal for prototyping, learning, teaching...
+Small, simple, no bullshit. Write cross-platform C code and see the result immediately. No installation or compiler required, download, unzip, run CToy and play. Ready for Windows, MacOSX and Linux. Ideal for prototyping, learning, teaching...
 
 Features
 --------
 
 * CToy: program update on file save (use any text editor)
 * CToy_player: to publish your project (dynamic update disabled)
-* API for window managment, inputs, persistent memory...
+* API for window managment, inputs, persistent memory, basic threads support...
 * Image processing with [MaratisTCL](https://github.com/anael-seghezzi/Maratis-Tiny-C-library)
 * OpenGLES-2
 * OpenAL
-* Portable pen-tablet support (Wacom, etc)
+* Cross-platform pen-tablet support (Wacom, etc)
 * Use C-symbols from native dynamic libraries (*.dll etc) : just copy libraries in your_ctoy_path/lib/
 * Pre-built Dear-Imgui suport (https://github.com/ocornut/imgui)
 * Can also compile your project with other compilers (CMake script for gcc, vs, mingw)
@@ -23,9 +23,9 @@ Features
 Download
 --------
 
-[- CToy 1.06 Win64](http://anael.maratis3d.com/ctoy/bin/CToy-1.06-WIN-x86_64.zip)<br>
-[- CToy 1.05 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.05-OSX_10.6-x86_64.zip)<br>
-[- CToy 1.05 Linux64](http://anael.maratis3d.com/ctoy/bin/CToy-1.05-Linux64-x86_64.zip)<br>
+[- CToy 1.10 Win64](http://anael.maratis3d.com/ctoy/bin/CToy-1.10-WIN-x64.zip)<br>
+[- CToy 1.10 MacOSX](http://anael.maratis3d.com/ctoy/bin/CToy-1.10-OSX.zip)<br>
+[- CToy 1.10 Linux64](http://anael.maratis3d.com/ctoy/bin/CToy-1.10-Linux-x64.zip)<br>
 [- [all versions]](http://anael.maratis3d.com/ctoy/bin/)
 
 Requirement For Linux: OpenAL
@@ -117,6 +117,10 @@ Building CToy from sources (CMake)
 
 **Unix:**
 
+    run build_unix.sh
+    
+    or type:
+    
     mkdir Build
     cd Build
     cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=../bin -DCMAKE_BUILD_TYPE=Release
@@ -125,10 +129,10 @@ Building CToy from sources (CMake)
 
 **Windows:**
 
+    run build_vs.bat
+    
+    or type:
+
     mkdir Build
     cd Build
-    cmake -G "Visual Studio 11 Win64" ../ -DCMAKE_INSTALL_PREFIX=../bin
-
-
-(libtcc.dll and libtcc.dylib where pre-built from a fork of tcc:
-[libtcc-fork](https://github.com/anael-seghezzi/tcc-0.9.26))
+    cmake -G "Visual Studio 17 2022" -A x64 ../ -DCMAKE_INSTALL_PREFIX=../bin
